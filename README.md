@@ -1,6 +1,8 @@
 MathGPT
 
 frontend:
-npm install three @react-three/fiber @react-three/drei
+cd frontend
+npm install
+npm run dev
 
 backend:
