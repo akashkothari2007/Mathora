@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { Action } from './actions'
+import { Action } from '../types/actions'
 import { SceneObject } from '../types/scene'
 
 type UseTimelineControllerProps = {
@@ -18,7 +18,7 @@ export function useTimelineController({
   const [step, setStep] = useState(0)
   const executedSteps = useRef<Set<number>>(new Set())
 
-  // 🔹 EFFECT 1: Execute action ONCE per step
+
   useEffect(() => {
     if (step >= actions.length) return
     if (executedSteps.current.has(step)) return
@@ -27,63 +27,24 @@ export function useTimelineController({
     const action = actions[step]
 
     console.log('Executing step', step, action)
+    // set the subtitle
     const subtitle = action.subtitle;
     setSubtitle(subtitle)
+
+    //execute the action
     switch (action.type) {
-      case 'plot_function':
-        setObjects(prev => [
-          ...prev,
-          {
-            id: action.id,
-            type: 'function',
-            props: {
-              f: action.equation,
-              animate: true,
-              color: action.color,
-            },
-          },
-        ])
-        break
-
-      case 'add_point':
-        setObjects(prev => [
-          ...prev,
-          {
-            id: action.id,
-            type: 'point',
-            props: {
-              x: action.x,
-              y: action.y,
-              animate: true,
-              color: action.color,
-            },
-          },
-        ])
-        break
-
-      case 'add_label':
-        setObjects(prev => [
-          ...prev,
-          {
-            id: action.id,
-            type: 'label',
-            props: {
-              text: action.text,
-              x: action.x,
-              y: action.y,
-              animate: true,
-              color: action.color,
-            },
-          },
-        ])
-        break
-
-      case 'wait':
-        break
+        case 'add':
+            setObjects(prev => [...prev, action.object])
+            break
+        case 'remove':
+            setObjects(prev => prev.filter(obj => obj.id !== action.id))
+            break
+        case 'wait':
+            break
     }
+  
   }, [step, actions, setObjects])
 
-  // 🔹 EFFECT 2: Advance timeline (ALWAYS runs)
   useEffect(() => {
     if (step >= actions.length) return
 

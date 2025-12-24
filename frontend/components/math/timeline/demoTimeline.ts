@@ -1,36 +1,55 @@
-import { Action } from './actions'
-
+import { Action } from '../types/actions'
+import { SceneObject } from '../types/scene'
+//fake timeline for testing
 export const demoTimeline: Action[] = [
   {
-    type: 'plot_function',
-    id: 'f1',
-    equation: (x) => Math.sin(x),
-    color: 'magenta',
+    type: 'add',
+    object: {
+        id: 'f1',
+        type: 'function',
+        props: {
+            f: (x: number) => Math.sin(x),
+        }
+    },
     time: 4,
     subtitle: 'Here is the graph of the function y = sin(x)',
   },
   {
-    type: 'add_point',
-    id: 'p1',
-    x: Math.PI/2,
-    y: 1,
-    color: 'cyan',
+    type: 'add',
+    object: {
+        id: 'p1',
+        type: 'point',
+        props: {
+            x: Math.PI/2,
+            y: 1,
+        }
+    },
     time: 2,
     subtitle: 'Here is the point (π/2,1)',
   },
   {
-    type: 'add_label',
-    id: 'l1',
-    text: '(π/2,1)',
-    x: Math.PI/2,
-    y: 1,
-    color: 'white',
+    type: 'add',
+    object: {
+        id: 'l1',
+        type: 'label',
+        props: {
+            text: '(π/2,1)',
+            x: Math.PI/2,
+            y: 1,
+        }
+    },
     time: 2,
     subtitle: 'Here is the label (π/2,1)',
   },
   {
     type: 'wait',
     time: 2,
-    subtitle: ' ',
+    subtitle: '',
+  },
+  {
+    type: 'remove',
+    id: 'l1',
+    time: 2,
+    subtitle: 'removing the label ',
   },
 ]
