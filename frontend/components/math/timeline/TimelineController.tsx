@@ -39,6 +39,15 @@ export function useTimelineController({
         case 'remove':
             setObjects(prev => prev.filter(obj => obj.id !== action.id))
             break
+        case 'update':
+            setObjects(prev =>
+                prev.map(obj =>
+                  obj.id === action.id
+                    ? { ...obj, props: { ...obj.props, ...action.props } }
+                    : obj
+                )
+              )
+            break
         case 'wait':
             break
     }

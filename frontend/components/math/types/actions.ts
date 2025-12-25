@@ -17,6 +17,13 @@ export type Action =
     subtitle: string
   }
   | {
+    type: 'update'
+    id: string
+    props: any
+    time: number
+    subtitle:string
+  }
+  | {
     type: 'wait'
     time: number
     subtitle: string

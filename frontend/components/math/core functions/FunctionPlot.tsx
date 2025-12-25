@@ -15,11 +15,9 @@ export type FunctionPlotProps = {
     color?: string
     lineWidth?: number
 
-    animate?: boolean
-    duration?: number
 }
 
-export default function FunctionPlot({f, xmin = -5, xmax = 5, steps = 1000, color = '#white', lineWidth = 1, animate = true, duration = 1}: FunctionPlotProps) {
+export default function FunctionPlot({f, xmin = -5, xmax = 5, steps = 1000, color = '#white', lineWidth = 1}: FunctionPlotProps) {
     
     const points = useMemo(() => {
         const pts: THREE.Vector3[] = []
@@ -35,13 +33,11 @@ export default function FunctionPlot({f, xmin = -5, xmax = 5, steps = 1000, colo
         return pts;
     }, [f, xmin, xmax, steps])
 
-    const [visibleCount, setVisibleCount] = useState(animate ? 2 : steps)
-    //if animate is true, set visibleCount to 0 else set visibleCount to steps so full
+    const [visibleCount, setVisibleCount] = useState(2) //need two points initilally visible
     useFrame((_, delta) => {
-        if (!animate) return;
 
         setVisibleCount(prev => {
-            const speed = steps/duration;
+            const speed = steps;
             const next = prev + speed * delta;
             return Math.min(next, steps);
         })
