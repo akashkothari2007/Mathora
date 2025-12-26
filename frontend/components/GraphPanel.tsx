@@ -10,6 +10,8 @@ import MathScene from './math/MathScene'
 import FunctionPlot from './math/core functions/FunctionPlot'
 import Point2D from './math/core functions/Point2D'
 import Label2D from './math/core functions/Label2D'
+import ShadeArea from './math/core functions/ShadeArea'
+
 
 import { SceneObject } from './math/types/scene'
 import { useTimelineController } from './math/timeline/TimelineController'
@@ -38,6 +40,8 @@ export default function GraphPanel({setSubtitle, actions}: Props) {
                         return (
                             <Label2D key={obj.id} {...obj.props} />
                         )
+                    case 'area':
+                        return <ShadeArea key={obj.id} {...obj.props} />
                     default:
                         return null
                 }

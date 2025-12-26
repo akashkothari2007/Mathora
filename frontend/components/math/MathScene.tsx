@@ -26,7 +26,7 @@ export default function MathScene({children}: MathSceneProps) {
             position={[10,10,10]}
             intensity={0.6}
             />
-            <Axes />
+            <Axes length = {15}/>
             <Grid />
 
 

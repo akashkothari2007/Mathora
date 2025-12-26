@@ -31,7 +31,7 @@ export function useTimelineController({
     const subtitle = action.subtitle;
     setSubtitle(subtitle)
 
-    //execute the action
+    //execute the graph action
     switch (action.type) {
         case 'add':
             setObjects(prev => [...prev, action.object])
