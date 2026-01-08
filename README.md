@@ -2,7 +2,7 @@
 
 > An AI-powered interactive calculus visualization tool that transforms mathematical concepts into dynamic, animated learning experiences.
 
-## 🎯 Vision
+## Vision
 
 Mathora gives AI models a new superpower: the ability to create rich, animated visualizations to teach students mathematical concepts. Instead of static graphs or simple explanations, AI can now generate complex animation timelines that show functions morphing, integrals being calculated, and concepts coming to life through smooth, professional animations.
 
@@ -10,34 +10,34 @@ The goal is to enhance student learning by making abstract mathematical concepts
 
 ---
 
-## ✨ Features
+## Features
 
-### 📊 Function Rendering & Animation
+### Function Rendering & Animation
 - **Real-time graphing** of mathematical functions using Three.js
 - **Smooth curve rendering** with high-resolution point sampling
 - **Animated transitions** - functions can morph to new equations with customizable duration
 - **Dynamic domain changes** - animate `xmin` and `xmax` in real-time
 - **Flicker-free updates** through intelligent interpolation
 
-### 🎨 Visual Integrals & Shading
+### Visual Integrals & Shading
 - **Accurate region shading** between functions `f(x)` and `g(x)` or above/below the x-axis
 - **Dynamic triangulated mesh** that updates as functions change
 - **Smooth morphing** of shaded areas during function transitions
 - **Stable geometry** with incremental interpolation for seamless animations
 
-### 🎬 Timeline-Based Animation System
+### Timeline-Based Animation System
 - **Complex animation sequences** with precise timing control
 - **Add, update, remove, and wait actions** for building rich narratives
 - **Subtitle system** for synchronized explanations
 - **Sequential and parallel animations** support
 
-### 🤖 AI-Powered Timeline Generation
+### AI-Powered Timeline Generation
 - **Natural language input** - describe what you want to visualize in plain English
 - **LLM-backed backend** generates complete animation timelines from prompts
 - **Structured JSON output** following strict TypeScript schemas
 - **Example**: "Show me how the integral of sin(x) changes as we shift it vertically"
 
-### 🎨 Professional UI
+### Professional UI
 - **Custom axes and grid** with labeled tick marks
 - **High-visibility design** optimized for educational use
 - **Infinite grid plane** with fade distance for depth perception
@@ -45,7 +45,7 @@ The goal is to enhance student learning by making abstract mathematical concepts
 
 ---
 
-## 🛠️ Technology Stack
+## Technology Stack
 
 ### Frontend
 - **Next.js 16** - React framework with App Router
@@ -78,10 +78,7 @@ MathGPT/
 │   │   │   ├── Grid.tsx   # Grid plane
 │   │   │   ├── MathScene.tsx  # Main 3D scene
 │   │   │   ├── core functions/
-│   │   │   │   ├── FunctionPlot.tsx  # Function graphing
-│   │   │   │   ├── ShadeArea.tsx     # Integral shading
-│   │   │   │   ├── Point2D.tsx       # Point visualization
-│   │   │   │   └── Label2D.tsx       # Text labels
+│   │   │   │   ├── # Functions like draw graph, area, points etc
 │   │   │   └── timeline/
 │   │   │       ├── TimelineController.tsx  # Animation controller
 │   │   │       └── demoTimeline.ts         # Example timeline
@@ -103,7 +100,7 @@ MathGPT/
 
 ---
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
 
@@ -169,7 +166,7 @@ MathGPT/
 
 ---
 
-## 🔮 Future Plans
+## Future Plans
 
 ### Enhanced AI Capabilities
 - [ ] Support for 3D function visualization
@@ -200,18 +197,5 @@ MathGPT/
 
 ---
 
-## 🤝 Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
----
-
-## 📄 License
-
-This project is licensed under the ISC License.
-
----
-
-## 🙏 Acknowledgments
-
-Built with inspiration from visualization tools like Desmos and GeoGebra, with a focus on bringing AI-powered animation capabilities to mathematical education.
+## Contributions
+Currently me, Shourya Sheth and Saf Nasim are working on this
