@@ -78,6 +78,7 @@ export const demoTimeline: Action[] = [
         },
       },
     },
+    
     time: 5,
     subtitle: "Tangent follows sin(x)",
   },
