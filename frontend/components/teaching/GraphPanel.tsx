@@ -17,6 +17,7 @@ import { GraphObject } from '../math/types/graphObject'
 import { useTimelineController } from '../math/timeline/TimelineController'
 import { Action } from '../math/types/actions';
 import { CameraTarget } from '../math/types/cameraTarget';
+import SlidingTangent from '../math/graphFunctions/slidingTangent';
 
 type Props = {
     setSubtitle: React.Dispatch<React.SetStateAction<string>>
@@ -44,6 +45,8 @@ export default function GraphPanel({setSubtitle, actions}: Props) {
                         )
                     case 'area':
                         return <ShadeArea key={obj.id} {...obj.props} />
+                    case 'slidingTangent':
+                        return <SlidingTangent key={obj.id} {...obj.props} />
                     default:
                         return null
                 }

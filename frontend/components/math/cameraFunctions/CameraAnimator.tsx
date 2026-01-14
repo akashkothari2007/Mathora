@@ -14,7 +14,6 @@ export default function CameraAnimator({ cameraTarget }: CameraAnimatorProps) {
 
   const startPos = useRef(new THREE.Vector3())
   const targetPos = useRef(new THREE.Vector3())
-  const lookAtPoint = useRef(new THREE.Vector3())
   const elapsedTime = useRef(0)
   const duration = useRef(1)
   const animating = useRef(false)
@@ -30,7 +29,6 @@ export default function CameraAnimator({ cameraTarget }: CameraAnimatorProps) {
     startPos.current.copy(camera.position)
 
     // For now always look at origin (totally fine for 2D-style graph)
-    lookAtPoint.current.set(0, 0, 0)
 
     // End position — if CameraTarget.position is required,
     // you don't need the "?."
@@ -63,12 +61,11 @@ export default function CameraAnimator({ cameraTarget }: CameraAnimatorProps) {
     )
     camera.position.copy(newPos)
 
-    camera.lookAt(lookAtPoint.current)
+    camera.lookAt(0, 0, 0)
     camera.updateProjectionMatrix()
 
     if (t >= 1) {
       camera.position.copy(targetPos.current)
-      camera.lookAt(lookAtPoint.current)
       camera.updateProjectionMatrix()
       animating.current = false
     }

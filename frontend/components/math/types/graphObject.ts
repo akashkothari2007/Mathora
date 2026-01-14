@@ -2,6 +2,7 @@ import { FunctionPlotProps } from "../graphFunctions/FunctionPlot"
 import { Point2DProps } from "../graphFunctions/Point2D"
 import { Label2DProps } from "../graphFunctions/Label2D"
 import { ShadeAreaProps } from "../graphFunctions/ShadeArea"
+import { SlidingTangentProps } from "../graphFunctions/slidingTangent"
 
 //types of objects for the graph for properties see core functions
 
@@ -25,4 +26,9 @@ export type GraphObject =
     id: string
     type: 'area'
     props: ShadeAreaProps
+}
+| {
+    id: string
+    type: 'slidingTangent'
+    props: SlidingTangentProps
 }
