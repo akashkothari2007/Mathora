@@ -1,7 +1,7 @@
 //action types for the timeline
 //has a type, id, time, subtitle and any other props for each type of action
 //see scene.ts for the types of objects that can be added to the scene
-import { SceneObject } from './scene'
+import { SceneObject } from './graphObject'
 
 export type Action =
   | {

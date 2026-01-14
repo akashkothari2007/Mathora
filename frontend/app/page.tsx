@@ -1,8 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import LandingScreen from '../components/LandingScreen'
-import TeachingView from '../components/TeachingView'
+import LandingScreen from '../components/landing/LandingScreen'
+import TeachingView from '../components/teaching/TeachingView'
 
 export default function Home() {
   const [mode, setMode] = useState<'landing' | 'teaching'>('landing')

@@ -1,7 +1,7 @@
-import { FunctionPlotProps } from "../core functions/FunctionPlot"
-import { Point2DProps } from "../core functions/Point2D"
-import { Label2DProps } from "../core functions/Label2D"
-import { ShadeAreaProps } from "../core functions/ShadeArea"
+import { FunctionPlotProps } from "../graphFunctions/FunctionPlot"
+import { Point2DProps } from "../graphFunctions/Point2D"
+import { Label2DProps } from "../graphFunctions/Label2D"
+import { ShadeAreaProps } from "../graphFunctions/ShadeArea"
 
 //types of objects for the graph for properties see core functions
 

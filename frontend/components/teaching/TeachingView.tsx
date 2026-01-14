@@ -3,7 +3,7 @@ import Sidebar from './Sidebar'
 import TopBar from './TopBar'
 import MainView from './MainView'
 
-import { demoTimeline } from './math/timeline/demoTimeline'
+import { demoTimeline } from '../math/timeline/demoTimeline'
 
 type Props = {
     prompt: string

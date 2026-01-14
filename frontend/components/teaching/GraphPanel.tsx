@@ -5,17 +5,17 @@ import { useState, useEffect, Suspense } from 'react';
 
 
 
-import MathScene from './math/MathScene'
+import MathScene from '../math/scene/MathScene'
 
-import FunctionPlot from './math/core functions/FunctionPlot'
-import Point2D from './math/core functions/Point2D'
-import Label2D from './math/core functions/Label2D'
-import ShadeArea from './math/core functions/ShadeArea'
+import FunctionPlot from '../math/graphFunctions/FunctionPlot'
+import Point2D from '../math/graphFunctions/Point2D'
+import Label2D from '../math/graphFunctions/Label2D'
+import ShadeArea from '../math/graphFunctions/ShadeArea'
 
 
-import { SceneObject } from './math/types/scene'
-import { useTimelineController } from './math/timeline/TimelineController'
-import { Action } from './math/types/actions';
+import { GraphObject } from '../math/types/graphObject'
+import { useTimelineController } from '../math/timeline/TimelineController'
+import { Action } from '../math/types/actions';
 
 type Props = {
     setSubtitle: React.Dispatch<React.SetStateAction<string>>
@@ -24,7 +24,7 @@ type Props = {
 
 
 export default function GraphPanel({setSubtitle, actions}: Props) {
-    const [objects, setObjects] = useState<SceneObject[]>([])
+    const [objects, setObjects] = useState<GraphObject[]>([])
     useTimelineController({actions: actions, setObjects, setSubtitle})
     return (
         <div className = "w-full h-full">

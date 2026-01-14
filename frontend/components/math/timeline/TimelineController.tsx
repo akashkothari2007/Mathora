@@ -2,11 +2,11 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { Action } from '../types/actions'
-import { SceneObject } from '../types/scene'
+import { GraphObject } from '../types/graphObject'
 
 type UseTimelineControllerProps = {
   actions: Action[]
-  setObjects: React.Dispatch<React.SetStateAction<SceneObject[]>>
+  setObjects: React.Dispatch<React.SetStateAction<GraphObject[]>>
   setSubtitle: React.Dispatch<React.SetStateAction<string>>
 }
 

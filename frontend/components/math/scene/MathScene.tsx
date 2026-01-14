@@ -6,7 +6,6 @@ import Axes from './Axes'
 import Grid from './Grid'
 import {ReactNode, Suspense} from 'react'
 import { Text } from '@react-three/drei'
-import CameraLogger from './CameraLogger'
 
 type MathSceneProps = {
     children?: ReactNode
