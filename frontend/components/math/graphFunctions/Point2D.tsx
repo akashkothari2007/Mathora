@@ -40,6 +40,8 @@ export default function Point2D({
   // 0–1 progress for followFunction
   const [followProgress, setFollowProgress] = useState(0)
 
+  const animateStartRef = useRef<{ x: number; y: number } | null>(null)
+
   // whenever base position changes, reset to that (if not animating)
   useEffect(() => {
     setCurrentPosition(position)
@@ -48,7 +50,10 @@ export default function Point2D({
   // reset on new animations
   useEffect(() => {
     if (animateTo) {
+      animateStartRef.current = { ...currentPosition }
+
       setAnimateProgress(0)
+      
     }
     if (followFunction) {
       setFollowProgress(0)
@@ -92,12 +97,14 @@ export default function Point2D({
       setAnimateProgress(prev => {
         const speed = 1 / animateDuration
         const next = Math.min(prev + speed * delta, 1)
-
+    
+        const start = animateStartRef.current ?? currentPosition
+    
         const newPosition = {
-          x: position.x + (animateTo.x - position.x) * next,
-          y: position.y + (animateTo.y - position.y) * next,
+          x: start.x + (animateTo.x - start.x) * next,
+          y: start.y + (animateTo.y - start.y) * next,
         }
-
+    
         setCurrentPosition(newPosition)
         return next
       })

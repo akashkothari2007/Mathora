@@ -3,7 +3,23 @@ import Sidebar from './Sidebar'
 import TopBar from './TopBar'
 import MainView from './MainView'
 
-import { demoTimeline } from '../math/timeline/demoTimeline'
+//random ass tests
+import { wavesArtTimeline } from '../math/timeline/randomTests/artDemoTimeline'
+import { demoTimeline } from '../math/timeline/randomTests/demoTimeline'
+import { integralDemoTimeline } from '../math/timeline/randomTests/integralDemoTimeline'
+
+
+//core tests
+import {
+    pointAndLabelTestTimeline,
+    functionPlotTimeline,
+    shadeAreaTimeline,
+    slidingTangentTimeline,
+    cameraTimeline,
+} from '../math/timeline/coreFunctionTests/index'
+import { Action } from '../math/types/actions'
+
+
 
 type Props = {
     prompt: string
@@ -17,7 +33,18 @@ export default function TeachingView({prompt, onNewChat}: Props) {
     const [showExplanation, setShowExplanation] = useState(true)
 
     //GET ACTIONS FROM PROMPT HERE MAKE API CALL TO BACKEND
-    const actions = demoTimeline
+    let actions = wavesArtTimeline 
+    if (prompt === 'area test') {
+        actions = shadeAreaTimeline
+    } else if (prompt === 'point test') {
+        actions = pointAndLabelTestTimeline
+    } else if (prompt === 'function test') {
+        actions = functionPlotTimeline
+    } else if (prompt === 'tangent test') {
+        actions = slidingTangentTimeline
+    } else if (prompt === 'camera test') {
+        actions = cameraTimeline
+    }
     const [subtitle, setSubtitle] = useState(' ')
     return (
         <div className = "h-full flex flex-col">

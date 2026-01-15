@@ -1,4 +1,4 @@
-import { Action } from "../types/actions";
+import { Action } from "../../types/actions";
 
 export const demoTimeline: Action[] = [
   // 1️⃣ Add base function f1
