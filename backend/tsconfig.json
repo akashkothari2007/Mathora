@@ -12,6 +12,6 @@
 
     "sourceMap": true
   },
-  "include": ["src"],
+  "include": ["src", "timeline.ts"],
   "exclude": ["node_modules"]
 }

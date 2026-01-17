@@ -1,7 +1,13 @@
 import express from "express";
-import timelineRoute from "./routes/timeline";
+import cors from "cors";
+import timelineRoute from "./routes/timeline";    
+import dotenv from "dotenv";
+dotenv.config();
+
+
 
 const app = express();
+app.use(cors());
 app.use(express.json());
 
 app.use("/timeline", timelineRoute);

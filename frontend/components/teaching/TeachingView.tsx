@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Sidebar from './Sidebar'
 import TopBar from './TopBar'
 import MainView from './MainView'
@@ -31,21 +31,73 @@ export default function TeachingView({prompt, onNewChat}: Props) {
     const [showGraph, setShowGraph] = useState(true)
     const [showWhiteboard, setShowWhiteboard] = useState(false)
     const [showExplanation, setShowExplanation] = useState(true)
-
-    //GET ACTIONS FROM PROMPT HERE MAKE API CALL TO BACKEND
-    let actions = wavesArtTimeline 
-    if (prompt === 'area test') {
-        actions = shadeAreaTimeline
-    } else if (prompt === 'point test') {
-        actions = pointAndLabelTestTimeline
-    } else if (prompt === 'function test') {
-        actions = functionPlotTimeline
-    } else if (prompt === 'tangent test') {
-        actions = slidingTangentTimeline
-    } else if (prompt === 'camera test') {
-        actions = cameraTimeline
-    }
+    const [actions, setActions] = useState<Action[] | null>(null)
     const [subtitle, setSubtitle] = useState(' ')
+
+    useEffect(() => {
+        // Handle test prompts
+        if (prompt === 'area test') {
+            setActions(shadeAreaTimeline)
+            return
+        } else if (prompt === 'point test') {
+            setActions(pointAndLabelTestTimeline)
+            return
+        } else if (prompt === 'function test') {
+            setActions(functionPlotTimeline)
+            return
+        } else if (prompt === 'tangent test') {
+            setActions(slidingTangentTimeline)
+            return
+        } else if (prompt === 'camera test') {
+            setActions(cameraTimeline)
+            return
+        }
+
+        // Reset actions while loading
+        setActions(null)
+
+        // Make API call for real prompts
+        const fetchTimeline = async () => {
+            try {
+                console.log('[Frontend] Fetching timeline for prompt:', prompt)
+                const response = await fetch('http://localhost:3001/timeline', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt }),
+                })
+                const data = await response.json()
+                console.log('[Frontend] Received response data:', data)
+                
+                // Debug: Check if data is defined and has timeline
+                if (!data) {
+                    console.error('[Frontend] Data is undefined')
+                    setActions(wavesArtTimeline) // Fallback
+                    return
+                }
+                
+                if (!data.timeline) {
+                    console.error('[Frontend] data.timeline is undefined. Full data:', JSON.stringify(data, null, 2))
+                    setActions(wavesArtTimeline) // Fallback
+                    return
+                }
+                
+                // Debug: Check if timeline is an array
+                if (!Array.isArray(data.timeline)) {
+                    console.error('[Frontend] data.timeline is not an array:', typeof data.timeline, data.timeline)
+                    setActions(wavesArtTimeline) // Fallback
+                    return
+                }
+                
+                console.log('[Frontend] Setting actions, count:', data.timeline.length)
+                setActions(data.timeline)
+            } catch (err) {
+                console.error('[Frontend] Failed to fetch timeline:', err)
+                setActions(wavesArtTimeline) // Fallback
+            }
+        }
+
+        fetchTimeline()
+    }, [prompt])
     return (
         <div className = "h-full flex flex-col">
             <TopBar
@@ -78,13 +130,22 @@ export default function TeachingView({prompt, onNewChat}: Props) {
                 </div>
 
                 {/* Main content */}
-                <MainView
-                    showGraph={showGraph}
-                    showWhiteboard={showWhiteboard}
-                    showExplanation={showExplanation}
-                    setSubtitle={setSubtitle}
-                    actions={actions}
-                />
+                {actions ? (
+                    <MainView
+                        showGraph={showGraph}
+                        showWhiteboard={showWhiteboard}
+                        showExplanation={showExplanation}
+                        setSubtitle={setSubtitle}
+                        actions={actions}
+                    />
+                ) : (
+                    <div className="flex-1 flex items-center justify-center bg-neutral-950">
+                        <div className="text-center">
+                            <div className="text-neutral-400 text-lg mb-2">Generating animation timeline...</div>
+                            <div className="text-neutral-500 text-sm">Please wait while the AI creates your visualization</div>
+                        </div>
+                    </div>
+                )}
                 </div>
             
             <div className="h-10 text-center text-sm text-neutral-500 border-t border-neutral-800/50">
