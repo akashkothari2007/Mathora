@@ -127,6 +127,12 @@ IMPORTANT RULES:
 - Each action has a subtitle (text explanation)
 - For 'update' actions, only include props that are changing
 - Camera target is optional on any action - use it to smoothly move camera to different viewpoints
+- All numeric values must be plain numbers only
+- Pre-compute ALL Math operations before outputting JSON
+- Instead of "Math.PI", use 3.14159265359
+- Instead of "2 * Math.PI", use 6.28318530718
+- Instead of "Math.PI / 2", use 1.57079632679
+- NO multiplication, division, or Math functions in the JSON output
 
 User request:
 "${userQuestion}"

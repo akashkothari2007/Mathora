@@ -74,7 +74,8 @@ export async function generateTimeline(question: string) {
     textResponse = textResponse.replace(/^```\s*/, '').replace(/\s*```$/, '');
   }
   textResponse = textResponse.trim();
-
+  console.log(textResponse)
+  textResponse = textResponse.replace(/Math\.PI/g, '3.14159265359')
   let timelineData: unknown;
   try {
     timelineData = JSON.parse(textResponse);
