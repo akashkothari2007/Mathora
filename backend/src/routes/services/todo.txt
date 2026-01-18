@@ -1,0 +1,12 @@
+schema.ts -> handle for when false error when trying to turn 
+function string into JS function (.refine)
+
+DoS dependabot thing
+
+shit slow llm
+
+prompt engineering lol 
+
+dont be like akash and accidently send api key in github
+
+better parsing look for a library or something

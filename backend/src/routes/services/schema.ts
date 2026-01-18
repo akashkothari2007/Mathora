@@ -18,6 +18,17 @@ export const ActionSchema = z.object({
       type: z.enum(["function", "point", "label", "area", "slidingTangent"]),
       props: z.record(z.string(), z.any())
     })
+    .refine((val)=>{
+      if (val.type === "function" && typeof val.props?.f ==="string") {
+        try{
+          new Function("x", `return ${val.props.f}`)
+          return true;
+        } catch{
+          return false;
+        }
+      }
+      return true;
+    })
     .optional(),
 
   props: z.record(z.string(), z.any()).optional()
