@@ -120,19 +120,17 @@ type GraphObject =
 
 IMPORTANT RULES:
 - Output ONLY valid JSON array - no markdown, no explanation, no code blocks, no trailing text
-- Functions must be valid JavaScript strings like "(x) => Math.sin(x)" or "(x) => x * x"
-- Use Math.PI for pi, Math.sin, Math.cos, Math.exp, etc. for mathematical functions
+- Function strings can contain JavaScript: "(x) => Math.sin(x)" is OK for the "f" field
+- All numeric values (xmin, xmax, position, time, etc) must be plain numbers ONLY - NO expressions
+- Pre-compute all Math: use 3.14159265359 instead of Math.PI, use 6.28318530718 instead of 2*Math.PI
 - Timeline must be sequential and logical
 - Each action has a time (duration in seconds for this step) - DEFAULT: 4 seconds if not specified
 - Each action has a subtitle (text explanation)
 - For 'update' actions, only include props that are changing
 - Camera target is optional on any action - use it to smoothly move camera to different viewpoints
-- All numeric values must be plain numbers only
-- Pre-compute ALL Math operations before outputting JSON
-- Instead of "Math.PI", use 3.14159265359
-- Instead of "2 * Math.PI", use 6.28318530718
-- Instead of "Math.PI / 2", use 1.57079632679
-- NO multiplication, division, or Math functions in the JSON output
+- For animation updates, use standard prop names like: position, color, size, f
+- Do NOT invent new fields like animateTo or animateDuration
+- Keep props simple and flat
 
 User request:
 "${userQuestion}"

@@ -7,8 +7,8 @@ const CameraTargetSchema = z.object({
 
 export const ActionSchema = z.object({
   type: z.enum(["add", "update", "remove", "wait"]),
-  time: z.number(),
-  subtitle: z.string(),
+  time: z.number().or(z.string().transform(val => parseFloat(val))),
+  subtitle: z.string().transform(str => str.trim()),
   id: z.string().optional(),
   target: CameraTargetSchema.optional(),
 
