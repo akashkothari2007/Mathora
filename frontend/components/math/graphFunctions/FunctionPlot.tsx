@@ -13,7 +13,7 @@ export type FunctionPlotProps = {
   color?: string
   lineWidth?: number
 
-  animateTo?: (x: number) => number
+  g?: (x: number) => number
   animateDuration?: number
 }
 
@@ -24,7 +24,7 @@ export default function FunctionPlot({
   steps = 1000,
   color = '#ffffff',
   lineWidth = 1,
-  animateTo,
+  g,
   animateDuration = 1,
 }: FunctionPlotProps) {
 
@@ -67,18 +67,18 @@ export default function FunctionPlot({
 
   //compute new target points when animateTo changes
   useEffect(() => {
-    if (!animateTo) return
+    if (!g) return
 
     const arr: THREE.Vector3[] = []
     for (let i = 0; i <= steps; i++) {
       const t = i / steps
       const x = xmin + t * (xmax - xmin)
-      const y = animateTo(x)
+      const y = g(x)
       arr.push(new THREE.Vector3(x, y, 0))
     }
     setTargetPoints(arr)
     setProgress(0)
-  }, [animateTo, xmin, xmax, steps])
+  }, [g, xmin, xmax, steps])
   
 
   // now we animate the drawing, animate the morphing

@@ -208,7 +208,7 @@ export const wavesArtTimeline: Action[] = [
     type: "update",
     id: "wave1",
     props: {
-      animateTo: (x: number) => Math.cos(2 * x) * 0.8,
+      g: (x: number) => Math.cos(2 * x) * 0.8,
       animateDuration: 3,
     },
     time: 3,
@@ -218,7 +218,7 @@ export const wavesArtTimeline: Action[] = [
     type: "update",
     id: "wave2",
     props: {
-      animateTo: (x: number) => 0.6 * Math.sin(3 * x + Math.PI / 2),
+      g: (x: number) => 0.6 * Math.sin(3 * x + Math.PI / 2),
       animateDuration: 3,
     },
     time: 0,
@@ -228,7 +228,7 @@ export const wavesArtTimeline: Action[] = [
     type: "update",
     id: "wave3",
     props: {
-      animateTo: (x: number) => 0.3 * Math.cos(4 * x),
+      g: (x: number) => 0.3 * Math.cos(4 * x),
       animateDuration: 3,
     },
     time: 0,
@@ -325,7 +325,7 @@ export const wavesArtTimeline: Action[] = [
     type: "update",
     id: "wave1",
     props: {
-      animateTo: (x: number) => 0.7 * Math.sin(x),
+      g: (x: number) => 0.7 * Math.sin(x),
       animateDuration: 2,
     },
     time: 1,

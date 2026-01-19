@@ -39,7 +39,7 @@ export const functionPlotTimeline: Action[] = [
       type: "update",
       id: "f_test",
       props: {
-        animateTo: (x: number) => x * x,
+        g: (x: number) => x * x,  
         animateDuration: 2,
       },
       time: 2,
@@ -51,7 +51,7 @@ export const functionPlotTimeline: Action[] = [
       type: "update",
       id: "f_test",
       props: {
-        animateTo: (x: number) => Math.sin(x),
+        g: (x: number) => Math.sin(x),
         animateDuration: 2,
       },
       time: 2,

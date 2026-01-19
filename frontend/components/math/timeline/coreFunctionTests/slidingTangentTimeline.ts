@@ -56,7 +56,7 @@ export const slidingTangentTimeline: Action[] = [
       type: "update",
       id: "f_tan",
       props: {
-        animateTo: (x: number) => 2 * Math.cos(x),
+        g: (x: number) => 2 * Math.cos(x),
         animateDuration: 2,
       },
       time: 4,

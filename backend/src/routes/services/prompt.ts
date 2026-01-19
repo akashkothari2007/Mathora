@@ -1,140 +1,130 @@
 export function buildPrompt(userQuestion: string) {
-    return `
-You are an animation engine timeline generator.
+  return `
+You generate animation timelines for a math visualization engine.
 
-You must output ONLY valid JSON - a single array of Action objects.
+Return ONLY a valid JSON array. No markdown. No explanations.
 
-TypeScript types you must follow:
+All math functions MUST be JavaScript EXPRESSION STRINGS using Math.*.
+Examples:
+- "Math.sin(x)"
+- "x*x"
+- "2*Math.cos(x)+1"
 
-type CameraTarget = {
-  position?: [number, number, number]  // [x, y, z] camera position
-  duration?: number  // animation duration in seconds
+Do NOT output "sin(x)". Always use Math.sin(x).
+Do NOT include arrow functions.
+
+All numbers must be plain numbers only.
+Use 3.14159265359 instead of Math.PI.
+
+Types:
+
+Action =
+- { type:"add", time:number, subtitle:string, object:GraphObject, target?:CameraTarget }
+- { type:"update", time:number, subtitle:string, id:string, props:any, target?:CameraTarget }
+- { type:"remove", time:number, subtitle:string, id:string, target?:CameraTarget }
+- { type:"wait", time:number, subtitle:string, target?:CameraTarget }
+
+CameraTarget = {
+  position?: [number, number, number]
+  duration?: number
 }
 
-type Action = 
-  | {
-      type: 'add'
-      object: GraphObject
-      time: number
-      subtitle: string
-      target?: CameraTarget
+GraphObject =
+- function:
+  {
+    id:string,
+    type:"function",
+    props:{
+      f:string,
+      xmin?:number,
+      xmax?:number,
+      steps?:number,
+      color?:string,
+      lineWidth?:number,
+      g?:string,
+      animateDuration?:number
     }
-  | {
-      type: 'remove'
-      id: string
-      time: number
-      subtitle: string
-      target?: CameraTarget
-    }
-  | {
-      type: 'update'
-      id: string
-      props: any
-      time: number
-      subtitle: string
-      target?: CameraTarget
-    }
-  | {
-      type: 'wait'
-      time: number
-      subtitle: string
-      target?: CameraTarget
-    }
+  }
 
-type GraphObject =
-  | {
-      id: string
-      type: 'function'
-      props: {
-        f: string  // JavaScript function as string like "(x) => Math.sin(x)"
-        xmin?: number  // default: -5
-        xmax?: number  // default: 5
-        steps?: number  // default: 1000
-        color?: string  // default: "#ffffff"
-        lineWidth?: number  // default: 1
-        animateTo?: string  // JavaScript function string for morphing
-        animateDuration?: number  // default: 1
+- point:
+  {
+    id:string,
+    type:"point",
+    props:{
+      position:{x:number,y:number},
+      color?:string,
+      size?:number,
+      animateTo?:{x:number,y:number},
+      animateDuration?:number,
+      followFunction?:{
+        f:string,
+        startX:number,
+        endX:number,
+        duration?:number
       }
     }
-  | {
-      id: string
-      type: 'point'
-      props: {
-        position: { x: number, y: number }
-        color?: string  // default: "red"
-        size?: number  // default: 0.04
-        animateTo?: { x: number, y: number }
-        animateDuration?: number  // default: 1
-        followFunction?: {
-          f: string  // JavaScript function string
-          startX: number
-          endX: number
-          duration?: number
-        }
-      }
-    }
-  | {
-      id: string
-      type: 'label'
-      props: {
-        text: string
-        position: { x: number, y: number }
-        color?: string  // default: "white"
-        fontSize?: number  // default: 0.3
-      }
-    }
-  | {
-      id: string
-      type: 'area'
-      props: {
-        f: string  // JavaScript function string
-        g?: string  // Optional second function (shades between f and g, or f and x-axis if not provided)
-        xmin: number
-        xmax: number
-        steps?: number  // default: 200
-        color?: string  // default: "#4ade80"
-        opacity?: number  // default: 0.5
-        animateTo?: {
-          f?: string
-          g?: string
-          xmin?: number
-          xmax?: number
-        }
-        animateDuration?: number  // default: 0.2
-      }
-    }
-  | {
-      id: string
-      type: 'slidingTangent'
-      props: {
-        f: string  // JavaScript function string
-        startX: number
-        endX: number
-        duration?: number  // default: 3
-        xmin?: number  // default: -5
-        xmax?: number  // default: 5
-        color?: string  // default: "blue"
-        lineWidth?: number  // default: 1
-      }
-    }
+  }
 
-IMPORTANT RULES:
-- Output ONLY valid JSON array - no markdown, no explanation, no code blocks, no trailing text
-- Function strings can contain JavaScript: "(x) => Math.sin(x)" is OK for the "f" field
-- All numeric values (xmin, xmax, position, time, etc) must be plain numbers ONLY - NO expressions
-- Pre-compute all Math: use 3.14159265359 instead of Math.PI, use 6.28318530718 instead of 2*Math.PI
-- Timeline must be sequential and logical
-- Each action has a time (duration in seconds for this step) - DEFAULT: 4 seconds if not specified
-- Each action has a subtitle (text explanation)
-- For 'update' actions, only include props that are changing
-- Camera target is optional on any action - use it to smoothly move camera to different viewpoints
-- For animation updates, use standard prop names like: position, color, size, f
-- Do NOT invent new fields like animateTo or animateDuration
-- Keep props simple and flat
+- label:
+  {
+    id:string,
+    type:"label",
+    props:{
+      text:string,
+      position:{x:number,y:number},
+      color?:string,
+      fontSize?:number
+    }
+  }
+
+- area:
+  {
+    id:string,
+    type:"area",
+    props:{
+      f:string,
+      g?:string,
+      xmin:number,
+      xmax:number,
+      steps?:number,
+      color?:string,
+      opacity?:number,
+      animateTo?:{
+        f?:string,
+        g?:string,
+        xmin?:number,
+        xmax?:number
+      },
+      animateDuration?:number
+    }
+  }
+
+- slidingTangent:
+  {
+    id:string,
+    type:"slidingTangent",
+    props:{
+      f:string,
+      startX:number,
+      endX:number,
+      duration?:number,
+      xmin?:number,
+      xmax?:number,
+      color?:string,
+      lineWidth?:number
+    }
+  }
+
+Rules:
+- Every action must have time (seconds) and subtitle
+- Use consistent ids ("f1","p1","area1","t1","lbl1")
+- Timeline should be logical and sequential
+- For update actions, include ONLY changed props
+- Default action time: ~3 seconds if not specified
 
 User request:
 "${userQuestion}"
 
-Output the JSON array now:
-`;
-  }  
+Return the JSON array now.
+`.trim()
+}

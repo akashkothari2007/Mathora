@@ -125,7 +125,7 @@ export const integralDemoTimeline: Action[] = [
     id: "secant",
     props: {
       // slope m = (4 - 1)/(2 - 1) = 3
-      animateTo: (x: number) => 3 * (x - 1) + 1,
+      g: (x: number) => 3 * (x - 1) + 1,
       animateDuration: 1.5,
     },
     time: 0,
@@ -149,7 +149,7 @@ export const integralDemoTimeline: Action[] = [
     id: "secant",
     props: {
       // slope m = (1.5² - 1)/(1.5 - 1) = (2.25 - 1)/0.5 = 2.5
-      animateTo: (x: number) => 2.5 * (x - 1) + 1,
+      g: (x: number) => 2.5 * (x - 1) + 1,
       animateDuration: 1.2,
     },
     time: 0,
@@ -170,7 +170,7 @@ export const integralDemoTimeline: Action[] = [
     id: "secant",
     props: {
       // derivative of x² is 2x ⇒ at x=1, slope = 2
-      animateTo: (x: number) => 2 * (x - 1) + 1,
+      g: (x: number) => 2 * (x - 1) + 1,
       animateDuration: 1.5,
     },
     time: 0,
@@ -257,7 +257,7 @@ export const integralDemoTimeline: Action[] = [
     type: "update",
     id: "f_deriv",
     props: {
-      animateTo: (x: number) => 2 * x,
+      g: (x: number) => 2 * x,
       animateDuration: 2.5,
     },
     time: 1,

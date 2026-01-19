@@ -2,12 +2,13 @@ import { useState, useEffect } from 'react'
 import Sidebar from './Sidebar'
 import TopBar from './TopBar'
 import MainView from './MainView'
+import { normalizeTimeline } from '../math/timeline/NormalizeTimeline'
 
 //random ass tests
 import { wavesArtTimeline } from '../math/timeline/randomTests/artDemoTimeline'
 import { demoTimeline } from '../math/timeline/randomTests/demoTimeline'
 import { integralDemoTimeline } from '../math/timeline/randomTests/integralDemoTimeline'
-
+import { rawTimeline } from '../math/timeline/randomTests/stringFunctions'
 
 //core tests
 import {
@@ -36,6 +37,10 @@ export default function TeachingView({prompt, onNewChat}: Props) {
 
     useEffect(() => {
         // Handle test prompts
+        if (prompt == 'normalize test') {
+            setActions(normalizeTimeline(rawTimeline))
+            return
+        }
         if (prompt === 'area test') {
             setActions(shadeAreaTimeline)
             return
@@ -87,9 +92,10 @@ export default function TeachingView({prompt, onNewChat}: Props) {
                     setActions(wavesArtTimeline) // Fallback
                     return
                 }
-                
-                console.log('[Frontend] Setting actions, count:', data.timeline.length)
-                setActions(data.timeline)
+                const normalizedTimeline = normalizeTimeline(data.timeline)
+                console.log('[Frontend] Normalized timeline:', normalizedTimeline)
+                console.log('[Frontend] Setting actions, count:', normalizedTimeline.length)
+                setActions(normalizedTimeline)
             } catch (err) {
                 console.error('[Frontend] Failed to fetch timeline:', err)
                 setActions(wavesArtTimeline) // Fallback

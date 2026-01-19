@@ -8,7 +8,7 @@ router.post("/", async (req, res) => {
     const { prompt } = req.body;
 
     const timeline = await generateTimeline(prompt);
-
+    
     res.json({ timeline });
   } catch (err: any) {
     res.status(400).json({ error: err.message });

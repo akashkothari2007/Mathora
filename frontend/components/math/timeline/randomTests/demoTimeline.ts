@@ -127,7 +127,7 @@ export const demoTimeline: Action[] = [
     type: "update",
     id: "f1",
     props: {
-      animateTo: (x:number) => 2*Math.sin(x),
+      g: (x:number) => 2*Math.sin(x),
       animateDuration: 1,
     },
     time: 0,
@@ -138,7 +138,7 @@ export const demoTimeline: Action[] = [
     type: "update",
     id: "f2",
     props: {
-      animateTo: (x:number) => 1 - 0.5*Math.cos(x),
+      g: (x:number) => 1 - 0.5*Math.cos(x),
       animateDuration: 1,
     },
     time: 0,
