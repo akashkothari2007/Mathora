@@ -44,8 +44,11 @@ export const functionPlotTimeline: Step[] = [
         },
       },
       {
-        type: "remove",
+        type: "update",
         id: "label_f",
+        props: {
+          text: "y = x²"
+        }
       }
     ],
   },
@@ -60,6 +63,13 @@ export const functionPlotTimeline: Step[] = [
           f: (x: number) => Math.sin(x),
         },
       },
+      {
+        type: "update",
+        id: "label_f",
+        props: {
+          text: "y = sin(X)"
+        }
+      }
     ],
   },
 
