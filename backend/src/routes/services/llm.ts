@@ -39,6 +39,7 @@ export async function generateTimeline(question: string) {
   };
   console.log('[Backend] [LLM] Request body:', JSON.stringify({ ...requestBody, messages: [{ ...requestBody.messages[0], content: `[${requestBody.messages[0].content.length} chars]` }] }, null, 2));
 
+  const t0 = Date.now();
   const response = await fetch(endpoint, {
     method: "POST",
     headers: {
@@ -52,6 +53,8 @@ export async function generateTimeline(question: string) {
 
   // First, await and assign to `any`
   const rawData: any = await response.json();
+  const t1 = Date.now();
+  console.log('[Backend] [LLM] Response time:', t1 - t0, 'ms');
   console.log('[Backend] [LLM] Response parsed, keys:', Object.keys(rawData));
   console.log('[Backend] [LLM] Response model:', rawData.model);
   console.log('[Backend] [LLM] Token usage:', JSON.stringify(rawData.usage, null, 2));
