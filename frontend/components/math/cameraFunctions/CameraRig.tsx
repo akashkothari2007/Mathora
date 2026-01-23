@@ -107,7 +107,6 @@ export default function CameraRig({ cameraTarget }: CameraRigProps) {
         const rotateSpeed = 0.005
         st.dYaw -= dx * rotateSpeed
 
-        // ✅ inverted: moving mouse up should increase pitch (look up)
         st.dPitch += dy * rotateSpeed
         st.dPitch = clamp(st.dPitch, -Math.PI / 2 + 0.05, Math.PI / 2 - 0.05)
         return
@@ -152,30 +151,35 @@ export default function CameraRig({ cameraTarget }: CameraRigProps) {
   }, [gl])
 
   // 2) When a cameraTarget arrives, switch to cinematic by setting desired orbit from its position
-  useEffect(() => {
-    if (!cameraTarget || !cameraTarget.position) {
-      s.current.cinematic = false
-      return
-    }
+// 2) When a cameraTarget arrives, switch to cinematic by setting desired orbit from its position
+useEffect(() => {
+  if (!cameraTarget || !cameraTarget.position) {
+    s.current.cinematic = false
+    return
+  }
 
-    s.current.cinematic = true
+  s.current.cinematic = true
 
-    const [px, py, pz] = cameraTarget.position
+  const [px, py, pz] = cameraTarget.position
 
-    // For now: always look at origin (later: support lookAt + fit)
-    s.current.dTarget.set(0, 0, 0)
+  // NEW: allow custom lookAt, fallback to origin
+  const look = cameraTarget.lookAt ?? [0, 0, 0]
+  s.current.dTarget.set(look[0], look[1], look[2])
 
-    const pos = new THREE.Vector3(px, py, pz)
-    const offset = pos.clone().sub(s.current.dTarget)
-    const r = offset.length()
+  const pos = new THREE.Vector3(px, py, pz)
+  const offset = pos.clone().sub(s.current.dTarget)
+  const r = offset.length()
 
-    const yaw = Math.atan2(offset.x, offset.z)
-    const pitch = Math.asin(clamp(offset.y / r, -1, 1))
+  // guard against r=0 just in case
+  if (r < 1e-6) {s.current.cinematic = false; return}
 
-    s.current.dYaw = yaw
-    s.current.dPitch = clamp(pitch, -Math.PI / 2 + 0.05, Math.PI / 2 - 0.05)
-    s.current.dRadius = clamp(r, 2, 80)
-  }, [cameraTarget])
+  const yaw = Math.atan2(offset.x, offset.z)
+  const pitch = Math.asin(clamp(offset.y / r, -1, 1))
+
+  s.current.dYaw = yaw
+  s.current.dPitch = clamp(pitch, -Math.PI / 2 + 0.05, Math.PI / 2 - 0.05)
+  s.current.dRadius = clamp(r, 2, 80)
+}, [cameraTarget])
 
   // 3) Per-frame: smooth current -> desired and apply to camera
   useFrame((_, delta) => {

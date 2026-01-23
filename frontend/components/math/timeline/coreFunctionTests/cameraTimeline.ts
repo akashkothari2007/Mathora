@@ -36,19 +36,19 @@ export const cameraTimeline: Step[] = [
 
   {
     subtitle: "Camera moves to the right.",
-    cameraTarget: { position: [8, 3, 20], duration: 2 },
+    cameraTarget: { position: [8, 3, 20], duration: 2, lookAt: [0, 0, 0] },
     actions: [],
   },
 
   {
     subtitle: "Camera moves to the left.",
-    cameraTarget: { position: [-8, 3, 20], duration: 2 },
+    cameraTarget: { position: [-8, 3, 20], duration: 2, lookAt: [10, 0, 0] },
     actions: [],
   },
 
   {
     subtitle: "Camera moves higher for an overview.",
-    cameraTarget: { position: [0, 10, 24], duration: 2 },
+    cameraTarget: { position: [0, 10, 24], duration: 2, lookAt: [-10, 0, 4] },
     actions: [],
   },
 

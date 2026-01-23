@@ -3,7 +3,7 @@ import { Step } from "../../types/steps";
 export const pointAndLabelTestTimeline: Step[] = [
   {
     subtitle: "Add a point at the origin.",
-    cameraTarget: null,
+    cameraTarget: { position: [0, 0, 0], lookAt: [0, 0, 0] },
     actions: [
       {
         type: "add",
@@ -33,7 +33,7 @@ export const pointAndLabelTestTimeline: Step[] = [
 
   {
     subtitle: "Animate the point to (2, 1).",
-    cameraTarget: null,
+    cameraTarget: { position: [2, 1, 0], lookAt: [2, 1, 0] },
     actions: [
       {
         type: "update",
@@ -58,7 +58,7 @@ export const pointAndLabelTestTimeline: Step[] = [
 
   {
     subtitle: "Point follows the curve y = sin(x) from -π to π.",
-    cameraTarget: null,
+    cameraTarget: { position: [2, 1, 0], lookAt: [-Math.PI, 0, 0] },
     actions: [
       {
         type: "update",

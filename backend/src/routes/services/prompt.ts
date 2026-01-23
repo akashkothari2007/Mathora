@@ -5,7 +5,7 @@ export function buildPrompt(userQuestion: string) {
   meaningful words you would use as if you were explaining the problem to a student in person with your voice. Make sure you guide the user to enhance their
   understanding and visualization of the problem through meaningful animations and good explanations.
 
-Step = { subtitle?:string, cameraTarget?:{position?:[n,n,n],duration?:n}|null, actions?:Action[] }
+Step = { subtitle?:string, cameraTarget?:{position?:[n,n,n],lookAt?:[n,n,n],duration?:n}|null, actions?:Action[] }
 Action = {type:"add",object:GraphObject} | {type:"update",id:string,props:any} | {type:"remove",id:string}
 
 GraphObject:
