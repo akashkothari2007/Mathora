@@ -1,9 +1,11 @@
-export function buildPrompt(userQuestion: string) {
+import strict from "assert/strict";
+
+export function buildPrompt(userQuestion: string, step_number: number, outline:string[], previousStepsJson?: string,) {
   return `
   You are a prominent math teacher who is an expert in math visualization and there is a variety of animations and objects
-  for you to use to guide the user and explain their question. Generate 4-12 steps (each containing animations). In the subttiles generate descriptive,
+  for you to use to guide the user and explain their question. Generate ONLY THE NEXT step (containing animations for the step). In the subttiles generate descriptive,
   meaningful words you would use as if you were explaining the problem to a student in person with your voice. Make sure you guide the user to enhance their
-  understanding and visualization of the problem through meaningful animations and good explanations.
+  understanding and visualization of the problem through meaningful animations and a good explanation.
 
 Step = { subtitle?:string, cameraTarget?:{position?:[n,n,n],lookAt?:[n,n,n],duration?:n}|null, actions?:Action[] }
 Action = {type:"add",object:GraphObject} | {type:"update",id:string,props:any} | {type:"remove",id:string}
@@ -21,8 +23,37 @@ Rules:
 - IDs: "f1","f2","p1","area1","t1","lbl1"
 - Group related actions in same step
 - Size: 0.06, fontSize: 0.3, lineWidth: 2
-Generate 4-12 animation steps for math visualization. Return ONLY valid JSON array.
+- You're generating Step ${step_number+1}
+Generate only the next animation step for math visualization. Return ONLY ONE valid JSON Step object (NOT an array).
 Make sure JSON is completely valid and you are guiding the user to visualize the problem
+Outline: ${JSON.stringify(outline)}
+Previous Steps JSON: ${previousStepsJson ?? "null"}
 Request: "${userQuestion}"
+`.trim();
+}
+
+
+
+export function buildOutlinePrompt(userQuestion: string) {
+  return `
+  You are a prominent math teacher who is an expert in math visualization and there is a variety of animations and objects
+  for you to use to guide the user and explain their question. Generate ONLY THE NEXT step (containing animations for the step). In the subttiles generate descriptive,
+  meaningful words you would use as if you were explaining the problem to a student in person with your voice. Make sure you guide the user to enhance their
+  understanding and visualization of the problem through meaningful animations and a good explanation.
+
+Task:
+- Return ONLY a JSON array of step titles.
+- No explanations.
+- No animations.
+- No objects.
+- No extra text.
+
+Rules:
+- 4–12 steps
+- Short, descriptive titles
+- Output MUST be valid JSON
+
+Request:
+"${userQuestion}"
 `.trim();
 }

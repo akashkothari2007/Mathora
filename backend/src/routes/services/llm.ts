@@ -1,7 +1,10 @@
 import { TimelineSchema } from "./schema";
 import { buildPrompt } from "./prompt";
+import { buildOutlinePrompt } from "./prompt";
 import dotenv from "dotenv";
 import {jsonrepair} from 'jsonrepair';
+import { string } from "zod/v4/core/regexes";
+import {StepSchema} from "./schema";
 dotenv.config();
 
 const API_KEY = process.env.DEEPSEEK_API_KEY;
@@ -14,14 +17,43 @@ type DeepSeekResponse = {
   }[];
 };
 
-export async function generateTimeline(question: string) {
-  console.log('[Backend] [LLM] Generating timeline for question:', question);
-  console.log('[Backend] [LLM] Using API key:', API_KEY ? `${API_KEY.substring(0, 10)}...` : 'MISSING');
-  
-  const prompt = buildPrompt(question);
-  console.log('[Backend] [LLM] Built prompt, length:', prompt.length, 'characters');
-  console.log('[Backend] [LLM] Prompt preview (first 300 chars):', prompt.substring(0, 300));
 
+
+
+
+export async function generateOutline(question: string): Promise<string[]> {
+  const prompt = buildOutlinePrompt(question);
+
+  const raw = await callDeepSeek(prompt);
+
+  const cleaned = raw
+    .trim()
+    .replace(/^```json\s*/i, "")
+    .replace(/^```\s*/i, "")
+    .replace(/\s*```$/, "");
+
+  const parsed = JSON.parse(cleaned);
+
+  if (!Array.isArray(parsed)) {
+    throw new Error("Outline is not an array");
+  }
+
+  return parsed;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+async function callDeepSeek(prompt:string){
   const endpoint = "https://api.deepseek.com/v1/chat/completions";
   console.log('[Backend] [LLM] Sending request to DeepSeek API:', endpoint);
 
@@ -33,7 +65,6 @@ export async function generateTimeline(question: string) {
         content: prompt,
       },
     ],
-    response_format: { type: "json_object" },
     max_tokens: 3000,
     temperature: 0.2,
   };
@@ -93,69 +124,123 @@ export async function generateTimeline(question: string) {
   } catch (e: any) {
     console.error('[Backend] [LLM] jsonrepair failed:', e?.message || e);
   }
-  
-  let timelineData: unknown;
-  
-  // Try parsing the JSON
-  try {
-    timelineData = JSON.parse(textResponse);
-    console.log('[Backend] [LLM] Successfully parsed JSON. Type:', Array.isArray(timelineData) ? 'array' : typeof timelineData);
-    if (Array.isArray(timelineData)) {
-      console.log('[Backend] [LLM] Timeline has', timelineData.length, 'steps');
-    }
-  } catch (err: any) {
-    console.error('[Backend] [LLM] JSON parse failed. Error:', err?.message || err);
-    console.error('[Backend] [LLM] Error position:', err?.toString().match(/position (\d+)/)?.[1] || 'unknown');
-    
-    // Try to extract partial valid JSON (find last complete step)
-    console.log('[Backend] [LLM] Attempting partial JSON recovery...');
-    const errorMatch = err?.toString().match(/position (\d+)/);
-    const errorPos = errorMatch ? parseInt(errorMatch[1]) : 0;
-    
-    if (errorPos > 50) { // Only try if we have enough content
-      // Simple approach: try to find the last complete Step by looking for }] patterns
-      // Find the last occurrence of }] before the error
-      const beforeError = textResponse.substring(0, errorPos);
-      const lastStepEnd = beforeError.lastIndexOf('}]');
-      
-      if (lastStepEnd > 10) {
-        // Try to extract array up to last complete step
-        const partial = beforeError.substring(0, lastStepEnd + 1);
-        let fixed = partial.trim();
-        
-        // Remove trailing comma if exists
-        if (fixed.endsWith(',')) {
-          fixed = fixed.slice(0, -1);
-        }
-        
-        // Ensure it's a valid array
-        if (fixed.startsWith('[')) {
-          if (!fixed.endsWith(']')) {
-            fixed += ']';
-          }
-          
-          try {
-            const recovered = JSON.parse(fixed);
-            if (Array.isArray(recovered) && recovered.length > 0) {
-              console.log('[Backend] [LLM] Partial recovery successful! Extracted', recovered.length, 'complete steps');
-              timelineData = recovered;
-            }
-          } catch (recoveryErr) {
-            console.error('[Backend] [LLM] Partial recovery attempt failed:', (recoveryErr as Error)?.message);
-          }
-        }
-      }
-    }
-    
-    if (!timelineData) {
-      console.error('[Backend] [LLM] Text response that failed (first 800 chars):', textResponse.substring(0, 800));
-      throw new Error(`Failed to parse JSON: ${err?.message || 'Unknown error'}`);
-    }
-  }
+  return textResponse;
+}
 
-  console.log('[Backend] [LLM] Validating with Zod schema...');
-  const parsed = TimelineSchema.parse(timelineData);
-  console.log('[Backend] [LLM] Zod validation passed. Timeline has', parsed.length, 'steps');
-  console.log('[Backend] [LLM] Returning validated timeline to route handler');
+
+export async function generateStep(question: string, step_number:number, outline: string[], previousStepJson?: any){
+
+    const prompt = buildPrompt(
+    question,
+    step_number,
+    outline,
+    previousStepJson ? JSON.stringify(previousStepJson) : undefined
+  );
+  const raw = await callDeepSeek(prompt);
+  const cleaned = raw
+    .trim()
+    .replace(/^```json\s*/i, "")
+    .replace(/^```\s*/i, "")
+    .replace(/\s*```$/, "");
+  const parsed = StepSchema.parse(JSON.parse(cleaned));
   return parsed;
 }
+
+
+
+
+
+export async function generateTimelineViaSteps(question: string) {
+  const outline = await generateOutline(question);
+
+  const steps: any[] = [];
+  let prev: any = undefined;
+
+  for (let i = 0; i < outline.length; i++) {
+    const step = await generateStep(question, i, outline, prev);
+    steps.push(step);
+    prev = step;
+  }
+
+  return TimelineSchema.parse(steps);
+}
+
+export async function generateTimeline(question: string) {
+  return generateTimelineViaSteps(question);
+}
+
+
+// export async function generateTimeline(question: string) {
+//   console.log('[Backend] [LLM] Generating timeline for question:', question);
+//   console.log('[Backend] [LLM] Using API key:', API_KEY ? `${API_KEY.substring(0, 10)}...` : 'MISSING');
+  
+//   const prompt = buildPrompt(question);
+//   console.log('[Backend] [LLM] Built prompt, length:', prompt.length, 'characters');
+//   console.log('[Backend] [LLM] Prompt preview (first 300 chars):', prompt.substring(0, 300));
+
+//   let textResponse = callDeepSeek(prompt);
+//   let timelineData: unknown;
+  
+//   // Try parsing the JSON
+//   try {
+//     timelineData = JSON.parse(textResponse);
+//     console.log('[Backend] [LLM] Successfully parsed JSON. Type:', Array.isArray(timelineData) ? 'array' : typeof timelineData);
+//     if (Array.isArray(timelineData)) {
+//       console.log('[Backend] [LLM] Timeline has', timelineData.length, 'steps');
+//     }
+//   } catch (err: any) {
+//     console.error('[Backend] [LLM] JSON parse failed. Error:', err?.message || err);
+//     console.error('[Backend] [LLM] Error position:', err?.toString().match(/position (\d+)/)?.[1] || 'unknown');
+    
+//     // Try to extract partial valid JSON (find last complete step)
+//     console.log('[Backend] [LLM] Attempting partial JSON recovery...');
+//     const errorMatch = err?.toString().match(/position (\d+)/);
+//     const errorPos = errorMatch ? parseInt(errorMatch[1]) : 0;
+    
+//     if (errorPos > 50) { // Only try if we have enough content
+//       // Simple approach: try to find the last complete Step by looking for }] patterns
+//       // Find the last occurrence of }] before the error
+//       const beforeError = textResponse.substring(0, errorPos);
+//       const lastStepEnd = beforeError.lastIndexOf('}]');
+      
+//       if (lastStepEnd > 10) {
+//         // Try to extract array up to last complete step
+//         const partial = beforeError.substring(0, lastStepEnd + 1);
+//         let fixed = partial.trim();
+        
+//         // Remove trailing comma if exists
+//         if (fixed.endsWith(',')) {
+//           fixed = fixed.slice(0, -1);
+//         }
+        
+//         // Ensure it's a valid array
+//         if (fixed.startsWith('[')) {
+//           if (!fixed.endsWith(']')) {
+//             fixed += ']';
+//           }
+          
+//           try {
+//             const recovered = JSON.parse(fixed);
+//             if (Array.isArray(recovered) && recovered.length > 0) {
+//               console.log('[Backend] [LLM] Partial recovery successful! Extracted', recovered.length, 'complete steps');
+//               timelineData = recovered;
+//             }
+//           } catch (recoveryErr) {
+//             console.error('[Backend] [LLM] Partial recovery attempt failed:', (recoveryErr as Error)?.message);
+//           }
+//         }
+//       }
+//     }
+    
+//     if (!timelineData) {
+//       console.error('[Backend] [LLM] Text response that failed (first 800 chars):', textResponse.substring(0, 800));
+//       throw new Error(`Failed to parse JSON: ${err?.message || 'Unknown error'}`);
+//     }
+//   }
+
+//   console.log('[Backend] [LLM] Validating with Zod schema...');
+//   const parsed = TimelineSchema.parse(timelineData);
+//   console.log('[Backend] [LLM] Zod validation passed. Timeline has', parsed.length, 'steps');
+//   console.log('[Backend] [LLM] Returning validated timeline to route handler');
+//   return parsed;
+// }
