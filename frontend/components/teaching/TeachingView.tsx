@@ -35,6 +35,10 @@ export default function TeachingView({prompt, onNewChat}: Props) {
     const fetchingRef = useRef(false)
     const currentPromptRef = useRef<string>('')
 
+    //sse steps
+    const eventSourceRef = useRef<EventSource | null>(null)
+    const rawStepsRef = useRef<any[]>([])
+
     useEffect(() => {
         // Handle test prompts
         if (prompt == 'normalize test') {
@@ -63,6 +67,11 @@ export default function TeachingView({prompt, onNewChat}: Props) {
             console.log('[Frontend] Already fetching for this prompt, skipping duplicate call')
             return
         }
+        
+        //clean up old connection if any
+        eventSourceRef.current?.close()
+        eventSourceRef.current = null
+        rawStepsRef.current = []
 
         // Reset actions while loading
         setSteps(null)
@@ -120,9 +129,60 @@ export default function TeachingView({prompt, onNewChat}: Props) {
                 const normalizedTimeline = normalizeSteps(data.firstStep)
                 console.log('[Frontend] Normalized timeline, final step count:', normalizedTimeline.length)
                 console.log('[Frontend] ========== REQUEST SUCCESS ==========')
-                
+
+                //save first step
+                rawStepsRef.current = data.firstStep
                 fetchingRef.current = false
                 setSteps(normalizedTimeline)
+
+
+                
+
+                
+                //start sse connection
+                // start SSE connection (named events)
+                const es = new EventSource(`http://localhost:3001/timeline/stream/${data.sessionId}`)
+                eventSourceRef.current = es
+
+                es.addEventListener("connected", (event) => {
+                    const d = JSON.parse((event as MessageEvent).data)
+                    console.log("[Frontend] SSE connected:", d)
+                    })
+
+                es.addEventListener("step", (event) => {
+                    const payload = JSON.parse((event as MessageEvent).data)
+                    console.log("[Frontend] SSE step:", payload)
+
+                    // payload.step is the next Step object
+                    rawStepsRef.current = [...rawStepsRef.current, payload.step]
+
+                    // normalize whole timeline (simple approach)
+                    const normalized = normalizeSteps(rawStepsRef.current)
+                    setSteps(normalized)
+                })
+
+                es.addEventListener("done", () => {
+                    console.log("[Frontend] SSE done")
+                    es.close()
+                    eventSourceRef.current = null
+                })
+
+                es.addEventListener("error", (event) => {
+                // NOTE: "error" can also fire on reconnect/network issues,
+                // so check if backend actually sent JSON
+                try {
+                    const payload = JSON.parse((event as MessageEvent).data)
+                    console.error("[Frontend] SSE backend error:", payload)
+                    alert(payload.error || "Streaming error")
+                } catch {
+                    console.error("[Frontend] SSE connection error (network/reconnect)")
+                }
+
+                es.close()
+                eventSourceRef.current = null
+                })
+                
+                
             } catch (err: any) {
                 console.error('[Frontend] ========== REQUEST FAILED ==========')
                 console.error('[Frontend] Error details:', err)
@@ -136,6 +196,10 @@ export default function TeachingView({prompt, onNewChat}: Props) {
         }
 
         fetchTimeline()
+        return () => {
+            eventSourceRef.current?.close()
+            eventSourceRef.current = null
+        }
     }, [prompt, onNewChat])
     return (
         <div className = "h-full flex flex-col">

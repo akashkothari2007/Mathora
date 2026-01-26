@@ -39,6 +39,23 @@ export async function generateOutline(question: string): Promise<string[]> {
   return parsed.outline;
 }
 
+export async function generateStep(question: string, step_number:number, outline: string[], previousStepJson?: any){
+
+  const prompt = buildPrompt(
+  question,
+  step_number,
+  outline,
+  previousStepJson ? JSON.stringify(previousStepJson) : undefined
+);
+const raw = await callOpenAI(prompt);
+const cleaned = raw
+  .trim()
+  .replace(/^```json\s*/i, "")
+  .replace(/^```\s*/i, "")
+  .replace(/\s*```$/, "");
+const parsed = StepSchema.parse(JSON.parse(cleaned));
+return parsed;
+}
 
 
 async function callDeepSeek(prompt:string){
@@ -117,46 +134,18 @@ async function callDeepSeek(prompt:string){
 }
 
 
-export async function generateStep(question: string, step_number:number, outline: string[], previousStepJson?: any){
-
-    const prompt = buildPrompt(
-    question,
-    step_number,
-    outline,
-    previousStepJson ? JSON.stringify(previousStepJson) : undefined
-  );
-  const raw = await callOpenAI(prompt);
-  const cleaned = raw
-    .trim()
-    .replace(/^```json\s*/i, "")
-    .replace(/^```\s*/i, "")
-    .replace(/\s*```$/, "");
-  const parsed = StepSchema.parse(JSON.parse(cleaned));
-  return parsed;
-}
 
 
 
 async function callOpenAI(prompt: string) {
   const endpoint = "https://api.openai.com/v1/responses";
-  console.log("[Backend] [LLM] Sending request to OpenAI Responses API:", endpoint);
-
   if (!OPENAI_API_KEY) throw new Error("OPENAI_API_KEY is missing");
 
   const requestBody = {
       model: "gpt-4.1-mini",
       input: [{ role: "user", content: prompt }],
-      temperature: 0,          // deterministic & faster
+      temperature: 0,
   };
-
-  console.log(
-    "[Backend] [LLM] Request body:",
-    JSON.stringify(
-      { ...requestBody, input: `[${prompt.length} chars]` },
-      null,
-      2
-    )
-  );
 
   const t0 = Date.now();
   const response = await fetch(endpoint, {
@@ -168,16 +157,15 @@ async function callOpenAI(prompt: string) {
     body: JSON.stringify(requestBody),
   });
 
-  console.log("[Backend] [LLM] Response received - status:", response.status, response.statusText);
+  if (!response.ok) {
+    throw new Error(`OpenAI API error: ${response.status} ${response.statusText}`);
+  }
 
   const rawData: any = await response.json();
   const t1 = Date.now();
-  console.log("[Backend] [LLM] Response time:", t1 - t0, "ms");
-  console.log("[Backend] [LLM] Response keys:", Object.keys(rawData));
-  console.log("[Backend] [LLM] Usage:", JSON.stringify(rawData.usage, null, 2));
+  console.log(`[Backend] [LLM] Response received in ${t1 - t0}ms`);
 
-  // Extract text from Responses API shape:
-  // response.output -> array of items -> each has content[] with {type:"output_text", text:"..."}
+  // Extract text from Responses API shape
   let textResponse = "";
   try {
     const output = rawData?.output ?? [];
@@ -189,19 +177,19 @@ async function callOpenAI(prompt: string) {
         }
       }
     }
-  } catch {}
+  } catch (e) {
+    console.error("[Backend] [LLM] Failed to extract text from response");
+    throw new Error("Failed to parse OpenAI response");
+  }
 
   textResponse = (textResponse || "").trim();
 
-  console.log("[Backend] [LLM] Extracted text response length:", textResponse.length);
-  console.log("[Backend] [LLM] Text preview (first 300):", textResponse.substring(0, 300));
-
   if (!textResponse) {
-    console.error("[Backend] No output text from OpenAI. Full response:", JSON.stringify(rawData, null, 2));
+    console.error("[Backend] [LLM] No output text from OpenAI");
     throw new Error("OpenAI returned no output text");
   }
 
-  // Same cleanup you already do
+  // Cleanup
   textResponse = textResponse
     .replace(/^```json\s*/i, "")
     .replace(/^```\s*/i, "")
@@ -209,7 +197,7 @@ async function callOpenAI(prompt: string) {
     .trim()
     .replace(/Math\.PI/g, "3.14159265359");
 
-  // jsonrepair as a safety net (should rarely be needed with json_object)
+  // jsonrepair as safety net
   try {
     const repairedText = jsonrepair(textResponse);
     if (repairedText !== textResponse) {
@@ -221,25 +209,6 @@ async function callOpenAI(prompt: string) {
   }
 
   return textResponse;
-}
-
-export async function generateTimelineViaSteps(question: string) {
-  const outline = await generateOutline(question);
-
-  const steps: any[] = [];
-  let prev: any = undefined;
-
-  for (let i = 0; i < outline.length; i++) {
-    const step = await generateStep(question, i, outline, prev);
-    steps.push(step);
-    prev = step;
-  }
-
-  return TimelineSchema.parse(steps);
-}
-
-export async function generateTimeline(question: string) {
-  return generateTimelineViaSteps(question);
 }
 
 

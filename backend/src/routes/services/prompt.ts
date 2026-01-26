@@ -21,9 +21,9 @@ Action:
 - remove: { type:"remove", id }
 
 GraphObject types:
-- function:        { f, xmin?, xmax?, color?, lineWidth? }
-- point:           { position, color?, size?, animateTo?, followFunction? }
-- label:           { text, position, color?, fontSize? }
+- function:        { f, xmin?, xmax?, color? }
+- point:           { position: {x, y}, color?, animateTo?, followFunction? }
+- label:           { text, position: {x, y}, color? }
 - area:            { f, g?, xmin, xmax, color?, opacity? }
 - slidingTangent:  { f, startX, endX, duration?, color? }
 

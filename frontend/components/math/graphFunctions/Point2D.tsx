@@ -23,7 +23,7 @@ export type Point2DProps = {
 export default function Point2D({
   position,
   color = 'red',
-  size = 0.04,
+  size = 0.08,
   animateTo,
   animateDuration = 1,
   followFunction,

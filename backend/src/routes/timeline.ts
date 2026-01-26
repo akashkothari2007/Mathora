@@ -1,56 +1,82 @@
 import { Router } from "express";
 import { generateOutline, generateStep} from "../routes/services/llm";
+import { startSessionRunner } from "../routes/services/sessionRunner";
+import {
+  createSession,
+  getSession,
+  addSubscriber,
+  removeSubscriber,
+} from "../routes/services/sessionStore";
 
 
 const router = Router();
 
-const sessions = new Map<string, {
-  outline: string[]
-  currentStep: number
-}>();
+
 
 router.post("/start", async (req, res) => {
   const requestId = Math.random().toString(36).substring(7);
-  console.log(`[Backend] ========== REQUEST ${requestId} RECEIVED ==========`);
+  const t0 = Date.now();
 
   try {
     const { prompt } = req.body;
+    console.log(`[Backend] [${requestId}] Received prompt: "${prompt}"`);
 
     if (!prompt) {
       return res.status(400).json({ error: "Prompt is required" });
     }
 
-    console.log(`[Backend] REQUEST ${requestId}: Generating outline for prompt: "${prompt}"`);
     const outline = await generateOutline(prompt);
+    console.log(`[Backend] [${requestId}] Outline generated (${outline.length} steps)`);
 
-    console.log(`[Backend] REQUEST ${requestId}: Generating first step for prompt: "${prompt}"`);
-    const firstStep = await generateStep(
-      prompt,
-      0,
-      outline,
-      null
-    );
-    console.log(`[Backend] REQUEST ${requestId}: First step generated: "${firstStep}"`);
-    const sessionId = Math.random().toString(36).slice(2);
+    const firstStep = await generateStep(prompt, 0, outline, null);
+    const t1 = Date.now();
+    console.log(`[Backend] [${requestId}] First step generated in ${t1 - t0}ms`);
 
-    sessions.set(sessionId, {
-      outline,
-      currentStep: 1, // next step index
-    });
-
-    console.log(`[Backend] REQUEST ${requestId}: Session ${sessionId} created`);
+    const session = createSession({ prompt, outline, firstStep });
+    console.log(`[Backend] [${requestId}] Session created: ${session.id}`);
 
     res.json({
-      sessionId,
+      sessionId: session.id,
       firstStep: [firstStep]
     });
 
   } catch (err: any) {
-    console.error(`[Backend] REQUEST ${requestId}: Error`, err.message);
+    console.error(`[Backend] [${requestId}] Error:`, err.message);
     res.status(500).json({ error: err.message });
   }
 });
 
+
+//SSE Streaming
+router.get("/stream/:sessionId", async (req, res) => {
+  const { sessionId } = req.params;
+  const session = getSession(sessionId);
+  if (!session) {
+    return res.status(404).json({ error: "Session not found" });
+  }
+  // SSE headers
+  res.setHeader("Content-Type", "text/event-stream");
+  res.setHeader("Cache-Control", "no-cache");
+  res.setHeader("Connection", "keep-alive");
+  // If behind nginx/proxies, this helps reduce buffering
+  res.setHeader("X-Accel-Buffering", "no");
+
+  //flush headers so client connects right away
+  res.flushHeaders?.();
+
+  addSubscriber(sessionId, res);
+  console.log(`[Backend] [SSE] Connection established for session ${sessionId}`);
+
+  res.write(`event: connected\ndata: ${JSON.stringify({ sessionId })}\n\n`);
+
+  startSessionRunner(sessionId);
+
+  // If client closes the tab / connection, cleanup
+  req.on("close", () => {
+    removeSubscriber(sessionId, res);
+    console.log(`[Backend] [SSE] Connection closed for session ${sessionId}`);
+  });
+});
 
 
 export default router;
