@@ -11,7 +11,7 @@ dont be like akash and accidently send api key in github
 
 better parsing look for a library or something
 
-what i did rn for sse:
+what i did rn for sse, it works just issues and its rough:
 so basically we hit backend /start it makes outline and first step and sends it to frontend
 also creates a session in memory, which has id, prompt, outline, what step we on, previous step for context for the llm whatever
 and session also has 'subscribers' rn its empty
@@ -35,3 +35,5 @@ p1, (1,2,3), f1, (x^3) or some shit yk so it knows all objects not just from las
 another issue i started at step 0 so in debugging i added one to it things might be fucked up or mismatched by 1 idk might be right too its hella confusing lol
 
 and maybe proper cleanup make sure sessions get deleted after just no huge errors blablabla
+
+also yk maybe fuck around with the prompt if u want to get it faster after the whole sse is done and fuck around with diff models
