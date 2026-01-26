@@ -1,34 +1,45 @@
 import strict from "assert/strict";
-
-export function buildPrompt(userQuestion: string, step_number: number, outline:string[], previousStepsJson?: string,) {
+export function buildPrompt(
+  userQuestion: string,
+  stepNumber: number,
+  outline: string[],
+  previousStepsJson?: string
+) {
   return `
-  You are a prominent math teacher who is an expert in math visualization and there is a variety of animations and objects
-  for you to use to guide the user and explain their question. Generate ONLY THE NEXT step (containing animations for the step). In the subttiles generate descriptive,
-  meaningful words you would use as if you were explaining the problem to a student in person with your voice. Make sure you guide the user to enhance their
-  understanding and visualization of the problem through meaningful animations and a good explanation.
+You are generating ONE math visualization step.
 
-Step = { subtitle?:string, cameraTarget?:{position?:[n,n,n],lookAt?:[n,n,n],duration?:n}|null, actions?:Action[] }
-Action = {type:"add",object:GraphObject} | {type:"update",id:string,props:any} | {type:"remove",id:string}
+Return ONE JSON object matching:
+{
+  subtitle?: string,
+  cameraTarget?: { position?: [n,n,n], lookAt?: [n,n,n], duration?: n } | null,
+  actions?: Action[]
+}
 
-GraphObject:
-- function: {id,type:"function",props:{f:string,xmin?:n,xmax?:n,color?:str,lineWidth?:n}}
-- point: {id,type:"point",props:{position:{x:n,y:n},color?:str,size?:0.06,animateTo?:{x:n,y:n}}}
-- label: {id,type:"label",props:{text:str,position:{x:n,y:n},color?:str,fontSize?:0.3}}
-- area: {id,type:"area",props:{f:string,g?:string,xmin:n,xmax:n,color?:str,opacity?:n}}
-- slidingTangent: {id,type:"slidingTangent",props:{f:string,startX:n,endX:n,duration?:n,color?:str}}
+Action:
+- add:    { type:"add", object:{ id, type, props } }
+- update: { type:"update", id, props }
+- remove: { type:"remove", id }
+
+GraphObject types:
+- function:        { f, xmin?, xmax?, color?, lineWidth? }
+- point:           { position, color?, size?, animateTo?, followFunction? }
+- label:           { text, position, color?, fontSize? }
+- area:            { f, g?, xmin, xmax, color?, opacity? }
+- slidingTangent:  { f, startX, endX, duration?, color? }
 
 Rules:
-- Functions: JS expressions like "Math.sin(x)", "x*x", "2*x+1" (NOT arrow functions)
-- Use 3.14159265359 instead of Math.PI
-- IDs: "f1","f2","p1","area1","t1","lbl1"
-- Group related actions in same step
-- Size: 0.06, fontSize: 0.3, lineWidth: 2
-- You're generating Step ${step_number+1}
-Generate only the next animation step for math visualization. Return ONLY ONE valid JSON Step object (NOT an array).
-Make sure JSON is completely valid and you are guiding the user to visualize the problem
-Outline: ${JSON.stringify(outline)}
-Previous Steps JSON: ${previousStepsJson ?? "null"}
-Request: "${userQuestion}"
+- f/g are JS expressions like "x*x" or "Math.sin(x)"
+- Use 3.14159265359 (never Math.PI)
+- IDs: f1,f2,p1,area1,t1,lbl1
+- subtitle = what you'd say aloud to teach
+- This is step ${stepNumber + 1} of ${outline.length}
+- Follow outline step: "${outline[stepNumber]}"
+
+Context:
+PreviousStep: ${previousStepsJson ?? "null"}
+
+Question:
+${JSON.stringify(userQuestion)}
 `.trim();
 }
 
@@ -36,24 +47,16 @@ Request: "${userQuestion}"
 
 export function buildOutlinePrompt(userQuestion: string) {
   return `
-  You are a prominent math teacher who is an expert in math visualization and there is a variety of animations and objects
-  for you to use to guide the user and explain their question. Generate ONLY THE NEXT step (containing animations for the step). In the subttiles generate descriptive,
-  meaningful words you would use as if you were explaining the problem to a student in person with your voice. Make sure you guide the user to enhance their
-  understanding and visualization of the problem through meaningful animations and a good explanation.
-
-Task:
-- Return ONLY a JSON array of step titles.
-- No explanations.
-- No animations.
-- No objects.
-- No extra text.
+Return ONLY valid JSON in this shape:
+{ "outline": string[] }
 
 Rules:
-- 4–12 steps
-- Short, descriptive titles
-- Output MUST be valid JSON
+- 4–10 steps
+- Each step is a short teaching goal (3–8 words)
+- No explanations
+- No extra keys
 
-Request:
-"${userQuestion}"
+Question:
+${JSON.stringify(userQuestion)}
 `.trim();
 }

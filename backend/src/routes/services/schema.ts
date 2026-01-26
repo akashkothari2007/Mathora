@@ -26,6 +26,7 @@ const FunctionExprSchema = z.string().refine(expr => {
 const CameraTargetSchema = z.object({
   position: z.tuple([z.number(), z.number(), z.number()]).optional(),
   duration: z.number().optional(),
+  lookAt: z.tuple([z.number(), z.number(), z.number()]).optional(),
 });
 
 

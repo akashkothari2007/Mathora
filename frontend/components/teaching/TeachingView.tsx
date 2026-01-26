@@ -75,8 +75,8 @@ export default function TeachingView({prompt, onNewChat}: Props) {
             console.log('[Frontend] Prompt submitted:', prompt)
             
             try {
-                console.log('[Frontend] Making API call to http://localhost:3001/timeline')
-                const response = await fetch('http://localhost:3001/timeline', {
+                console.log('[Frontend] Making API call to http://localhost:3001/timeline/start')
+                const response = await fetch('http://localhost:3001/timeline/start', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ prompt }),
@@ -104,19 +104,20 @@ export default function TeachingView({prompt, onNewChat}: Props) {
                     throw new Error(data.error)
                 }
                 
-                if (!data.timeline) {
-                    console.error('[Frontend] ERROR: data.timeline is undefined. Full data:', JSON.stringify(data, null, 2))
-                    throw new Error('Timeline missing from response')
+                if (!data.firstStep) {
+                    console.error('[Frontend] ERROR: data.firstStep is undefined. Full data:', JSON.stringify(data, null, 2))
+                    throw new Error('First step missing from response')
                 }
                 
-                // Debug: Check if timeline is an array
-                if (!Array.isArray(data.timeline)) {
-                    console.error('[Frontend] ERROR: data.timeline is not an array:', typeof data.timeline, data.timeline)
-                    throw new Error('Timeline is not an array')
+                // Debug: Check if firstStep is an array
+                console.log('[Frontend] First step:', data.firstStep)
+                if (!Array.isArray(data.firstStep)) {
+                    console.error('[Frontend] ERROR: data.firstStep is not an array:', typeof data.firstStep, data.firstStep)
+                    throw new Error('First step is not an array')
                 }
                 
-                console.log('[Frontend] Timeline received, step count:', data.timeline.length)
-                const normalizedTimeline = normalizeSteps(data.timeline)
+                console.log('[Frontend] Timeline received, step count:', data.firstStep.length)
+                const normalizedTimeline = normalizeSteps(data.firstStep)
                 console.log('[Frontend] Normalized timeline, final step count:', normalizedTimeline.length)
                 console.log('[Frontend] ========== REQUEST SUCCESS ==========')
                 
