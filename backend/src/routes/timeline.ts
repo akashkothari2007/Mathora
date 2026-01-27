@@ -37,7 +37,8 @@ router.post("/start", async (req, res) => {
 
     res.json({
       sessionId: session.id,
-      firstStep: [firstStep]
+      firstStep: [firstStep],
+      totalSteps: outline.length
     });
 
   } catch (err: any) {

@@ -9,6 +9,7 @@ type Props = {
     showExplanation: boolean
     setSubtitle: React.Dispatch<React.SetStateAction<string>>
     steps: Step[]
+    totalSteps: number
 
 }
 export default function MainView({
@@ -16,9 +17,10 @@ export default function MainView({
     showWhiteboard,
     showExplanation,
     setSubtitle,
-    steps}: Props) {
+    steps,
+    totalSteps}: Props) {
     const panels = [
-        showGraph && <GraphPanel key = "graph" setSubtitle={setSubtitle} steps={steps} />,
+        showGraph && <GraphPanel key = "graph" setSubtitle={setSubtitle} steps={steps} totalSteps={totalSteps} />,
         showWhiteboard && <Panel key = "whiteboard" title = "Whiteboard" />,
         showExplanation && <Panel key = "explanation" title = "Explanation" />,
     ].filter(Boolean)
