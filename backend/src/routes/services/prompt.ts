@@ -11,7 +11,7 @@ You are generating ONE math visualization step.
 Return ONE JSON object matching:
 {
   subtitle?: string,
-  cameraTarget?: { position?: [n,n,n], lookAt?: [n,n,n], duration?: n } | null,
+  cameraTarget?: { center?:[n,n,n],width?:n,height?:n,} | null,
   actions?: Action[]
 }
 
@@ -34,6 +34,7 @@ Rules:
 - subtitle = what you'd say aloud to teach
 - This is step ${stepNumber + 1} of ${outline.length}
 - Follow outline step: "${outline[stepNumber]}"
+- width and height are hard borders of the view keep obj inside
 
 Context:
 PreviousStep: ${previousStepsJson ?? "null"}

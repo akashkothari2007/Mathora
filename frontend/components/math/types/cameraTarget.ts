@@ -1,5 +1,7 @@
 export type CameraTarget = {
     position?: [number, number, number]
     duration?: number
-    lookat?: [number, number, number]
+    center?: [number, number, number]
+    width?: number
+    height?: number
 }

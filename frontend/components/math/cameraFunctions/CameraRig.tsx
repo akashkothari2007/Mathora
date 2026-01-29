@@ -20,14 +20,14 @@ export default function CameraRig({ cameraTarget }: CameraRigProps) {
   const s = useRef({
     // orbit state (current)
     target: new THREE.Vector3(0, 0, 0),
-    yaw: Math.PI / 4,
-    pitch: Math.PI / 8,
+    yaw:  0,
+    pitch: 0,
     radius: 10,
 
     // orbit state (desired)
     dTarget: new THREE.Vector3(0, 0, 0),
-    dYaw: Math.PI / 4,
-    dPitch: Math.PI / 8,
+    dYaw: 0,
+    dPitch: 0,
     dRadius: 10,
 
     // input
@@ -153,17 +153,53 @@ export default function CameraRig({ cameraTarget }: CameraRigProps) {
   // 2) When a cameraTarget arrives, switch to cinematic by setting desired orbit from its position
 // 2) When a cameraTarget arrives, switch to cinematic by setting desired orbit from its position
 useEffect(() => {
-  if (!cameraTarget || !cameraTarget.position) {
+  if (!cameraTarget) {
     s.current.cinematic = false
     return
   }
 
+
   s.current.cinematic = true
+
+  //if we have center or width then its like a 'fit'
+
+  if (cameraTarget.center && (cameraTarget.width || cameraTarget.height)) {
+    const [cx, cy, cz] = cameraTarget.center
+    s.current.dTarget.set(cx, cy, cz)
+    s.current.dYaw = 0
+    s.current.dPitch = 0
+
+    const vFov = (camera as THREE.PerspectiveCamera).fov * (Math.PI / 180)
+    const aspect = (camera as THREE.PerspectiveCamera).aspect || 1
+
+
+    //if ai put h and w both itll pick biggest one
+    const hFov = 2 * Math.atan(Math.tan(vFov / 2) * aspect);
+
+    const W = cameraTarget.width;
+    const H = cameraTarget.height;
+
+    // distance needed to fit width and height (if provided)
+    const distW = W ? (W / (2 * Math.tan(hFov / 2))) : 0;
+    const distH = H ? (H / (2 * Math.tan(vFov / 2))) : 0;
+
+    // pick the larger (further back) so BOTH fit
+    const distance = Math.max(distW, distH);
+
+    s.current.dRadius = clamp(distance, 2, 80);
+
+    return
+  }
+
+  if (!cameraTarget.position) {
+    s.current.cinematic = false
+    return
+  }
 
   const [px, py, pz] = cameraTarget.position
 
   // NEW: allow custom lookAt, fallback to origin
-  const look = cameraTarget.lookAt ?? [0, 0, 0]
+  const look = cameraTarget.center ?? [0, 0, 0]
   s.current.dTarget.set(look[0], look[1], look[2])
 
   const pos = new THREE.Vector3(px, py, pz)
@@ -208,10 +244,13 @@ useEffect(() => {
 
     // auto-unlock cinematic once we're close enough to the target position
     if (st.cinematic) {
-      const closePos = cameraTarget?.position
-      if (closePos) {
-        const dist = camera.position.distanceTo(new THREE.Vector3(closePos[0], closePos[1], closePos[2]))
-        if (dist < 0.02) st.cinematic = false
+      const targetClose = st.target.distanceTo(st.dTarget) < 0.01;
+      const radiusClose = Math.abs(st.radius - st.dRadius) < 0.02;
+      const yawClose = Math.abs(st.yaw - st.dYaw) < 0.01;
+      const pitchClose = Math.abs(st.pitch - st.dPitch) < 0.01;
+    
+      if (targetClose && radiusClose && yawClose && pitchClose) {
+        st.cinematic = false;
       }
     }
   })
