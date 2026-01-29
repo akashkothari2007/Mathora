@@ -44,3 +44,5 @@ also yk maybe fuck around with the prompt if u want to get it faster after the w
 
 ALSO something important maybe if a step fails like it cant be parsed sometimes the model puts a bad format
 we can just easy regenerate that step maybe add a fallback
+
+also fucking look into like how we can make sure the math is right at the very end maybe a math model idk
