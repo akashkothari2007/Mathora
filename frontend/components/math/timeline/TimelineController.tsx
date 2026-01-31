@@ -8,7 +8,7 @@ import { CameraTarget } from '../types/cameraTarget'
 type UseTimelineControllerProps = {
   steps: Step[]
   stepIndex: number
-  setObjects: React.Dispatch<React.SetStateAction<GraphObject[]>>
+  setGraphObjects: React.Dispatch<React.SetStateAction<GraphObject[]>>
   setSubtitle: React.Dispatch<React.SetStateAction<string>>
   setCameraTarget: React.Dispatch<React.SetStateAction<CameraTarget | null>>
   executed: React.RefObject<Set<number>>
@@ -17,7 +17,7 @@ type UseTimelineControllerProps = {
 
 export function useTimelineController({
   steps,
-  setObjects,
+  setGraphObjects,
   setSubtitle,
   setCameraTarget,
   stepIndex,
@@ -46,14 +46,14 @@ export function useTimelineController({
     for (const action of step.actions ?? []) {
       switch (action.type) {
         case 'add':
-          setObjects(prev => [...prev, action.object])
+          setGraphObjects(prev => [...prev, action.object])
           break
 
         case 'remove':
-          setObjects(prev => prev.filter(obj => obj.id !== action.id))
+          setGraphObjects(prev => prev.filter(obj => obj.id !== action.id))
           break
         case 'update':
-          setObjects(prev =>
+          setGraphObjects(prev =>
             prev.map(obj =>
               obj.id === action.id
                 ? { ...obj, props: { ...obj.props, ...action.props } }
@@ -63,7 +63,7 @@ export function useTimelineController({
           break
       }
     }
-  }, [stepIndex, steps, setObjects, setSubtitle, setCameraTarget])
+  }, [stepIndex, steps, setGraphObjects, setSubtitle, setCameraTarget])
 
 
 }
