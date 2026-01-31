@@ -25,12 +25,17 @@ export default function MainView({
     steps,
     totalSteps}: Props) {
 
+        //all animations states etc
+
         const [graphObjects, setGraphObjects] = useState<GraphObject[]>([]) //graph objects
         const [cameraTarget, setCameraTarget] = useState<CameraTarget | null>(null)   //camera target  
         const [stepIndex, setStepIndex] = useState(0) //cur index
         const executed = useRef<Set<number>>(new Set()) //what has been executed so far
 
+        // add whiteboard funcs here
 
+
+        // reset all animations, set everything to initial state
         const reset = () => {
             executed.current.clear()
             setGraphObjects([])
@@ -41,8 +46,8 @@ export default function MainView({
             })
         }
 
-        // Calculate percentages for the progress bar
-
+        
+        // use timeline controller to handle the timeline
         useTimelineController({steps: steps, setGraphObjects, setSubtitle, setCameraTarget, stepIndex, executed})    //use timeline controller to handle the timeline
 
         const panels = [
@@ -65,4 +70,4 @@ export default function MainView({
     )
     
 }
-
+    

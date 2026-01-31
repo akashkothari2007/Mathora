@@ -21,7 +21,7 @@ Action:
 - remove: { type:"remove", id }
 
 GraphObject types:
-- function:        { f, xmin?, xmax?, color? }
+- function:        { f, xmin?=-100, xmax?=100, color? }
 - point:           { position: {x, y}, color?, animateTo?, followFunction? }
 - label:           { text, position: {x, y}, color? }
 - area:            { f, g?, xmin, xmax, color?, opacity? }

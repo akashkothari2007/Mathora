@@ -29,9 +29,9 @@ function samplePoints(f: (x: number) => number, xmin: number, xmax: number, step
 
 export default function FunctionPlot({
   f,
-  xmin = -5,
-  xmax = 5,
-  steps = 1000,
+  xmin = -100,
+  xmax = 100,
+  steps = 10000,
   color = '#ffffff',
   lineWidth = 1,
 }: FunctionPlotProps) {
