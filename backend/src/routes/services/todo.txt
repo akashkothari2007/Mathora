@@ -30,6 +30,12 @@ just understand all ts make sure it makes sense cuz its rough rn
 
 Yo Saf here r some issues might be more:
 
+QUICK SUMMARY
+1. instead of prev step make it objects in scene condensed
+2. session ttl (if we create a session and leave rly quick then it hangs in memory)
+3. llm shit it gives malformed shit sometimes
+
+
 like okay say step1 it creates a point p1 and a line f1, step2 it updates the line f1, step3 it was only given prev step so maybe it tries to create a point
 again and uses p1 since it only thinks f1 exists, then it fucks up. probably gotta send it like a whole list of objects and update parameters
 so like on first request objects = null
@@ -38,7 +44,7 @@ then we updated f1 so for step 3 we send it
 p1, (1,2,3), f1, (x^3) or some shit yk so it knows all objects not just from last step
 so yeah see how we can store and send an updated objects summary list after every step 
 
-and maybe proper cleanup make sure sessions get deleted after just no huge errors blablabla
+and maybe proper cleanup make sure sessions get deleted after just no huge errors blablabla ADD TIME TO LIVE -> basically if u exit the app quickly after making the prompt session reated but sse never started
 
 also yk maybe fuck around with the prompt if u want to get it faster after the whole sse is done and fuck around with diff models
 

@@ -111,7 +111,10 @@ export function broadcastStep(sessionId: string, step: Step) {
   
     console.log(`[Backend] [SSE] Broadcasting step ${s.currentStep + 1}/${s.outline.length} for session ${sessionId}`);
     console.log(`[Backend] [SSE] Payload:`, JSON.stringify({ step, currentStep: payload.currentStep, totalSteps: payload.totalSteps}, null, 2));
-  
+    if (s.subscribers.size === 0) {
+      console.log(`[Backend] [SSE] No subscribers for session ${sessionId}, cannot broadcast`);
+      return;
+    }
     for (const res of s.subscribers) {
       try {
         sseWrite(res, "step", payload);

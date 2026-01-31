@@ -7,6 +7,7 @@ import {
     broadcastStep,
     broadcastDone,
     broadcastError,
+    deleteSession,
   } from "./sessionStore";
 
 
@@ -32,6 +33,7 @@ export async function startSessionRunner(sessionId: string) {
         // stop if user closed tab
         if (getSubscribers(sessionId).size === 0) {
           console.log(`[Backend] [Runner] No subscribers for session ${sessionId}, stopping`);
+          deleteSession(sessionId);
           return;
         }
   
@@ -56,6 +58,7 @@ export async function startSessionRunner(sessionId: string) {
     } catch (e: any) {
       console.error(`[Backend] [Runner] Error in session ${sessionId}:`, e?.message || e);
       broadcastError(sessionId, e?.message || "Runner crashed");
+      deleteSession(sessionId);
     } finally {
       running.delete(sessionId);
       console.log(`[Backend] [Runner] Stopped runner for session ${sessionId}`);
