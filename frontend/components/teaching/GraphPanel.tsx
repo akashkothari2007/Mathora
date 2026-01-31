@@ -34,7 +34,6 @@ export default function GraphPanel({setSubtitle, steps, totalSteps}: Props) {
     const availableSteps = steps?.length ?? 0
 
     const canGoNext = stepIndex < availableSteps - 1
-    const canGoPrev = stepIndex > 0
 
     const reset = () => {
         executed.current.clear()
@@ -58,16 +57,7 @@ export default function GraphPanel({setSubtitle, steps, totalSteps}: Props) {
             <div className="absolute top-16 left-4 z-50 flex flex-col gap-3 w-72">
                 {/* Buttons */}
                 <div className="flex gap-2">
-                    <button
-                        onClick={() => canGoPrev && setStepIndex(stepIndex - 1)}
-                        disabled={!canGoPrev}
-                        className={`rounded-lg px-4 py-2 text-sm font-medium shadow transition-all active:scale-[0.98]
-                            ${canGoPrev 
-                                ? 'bg-neutral-800 text-white hover:bg-neutral-700' 
-                                : 'bg-neutral-900 text-neutral-600 cursor-not-allowed'}`}
-                    >
-                        Prev
-                    </button>
+
                     <button
                         onClick={() => canGoNext && setStepIndex(stepIndex + 1)}
                         disabled={!canGoNext}
@@ -113,9 +103,7 @@ export default function GraphPanel({setSubtitle, steps, totalSteps}: Props) {
                             }
                         }}
                     >
-                        {/* Unavailable portion (dark) - this is the background */}
                         
-                        {/* Available portion (cyan) */}
                         <div 
                             className="absolute top-0 left-0 h-full bg-cyan-600/60 rounded-full transition-all duration-300"
                             style={{ width: `${availablePercent}%` }}
