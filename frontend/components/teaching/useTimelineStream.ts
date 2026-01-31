@@ -92,6 +92,7 @@ export function useTimelineStream(prompt: string, onNewChat: () => void) {
 
     // Cleanup: abort fetch + close SSE
     return () => {
+      console.log("cleanup");
       controller.abort();
       eventSourceRef.current?.close();
       eventSourceRef.current = null;
