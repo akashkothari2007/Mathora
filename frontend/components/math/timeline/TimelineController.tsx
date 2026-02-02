@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Step } from '../types/steps'
 import { GraphObject } from '../types/graphObject'
 import { CameraTarget } from '../types/cameraTarget'
+import { handleSubtitle } from './handleSubtitle'
 
 type UseTimelineControllerProps = {
   steps: Step[]
@@ -24,10 +25,9 @@ export function useTimelineController({
   executed,
 }: UseTimelineControllerProps) {
   
-
-
   // execute the current step exactly once
   useEffect(() => {
+
     if (stepIndex < 0 || stepIndex >= steps.length) return
     if (executed.current.has(stepIndex)) return
 
@@ -37,7 +37,7 @@ export function useTimelineController({
     console.log('Executing step', stepIndex, step)
 
     // subtitle + camera are step-level now
-    setSubtitle(step.subtitle ?? '')
+    handleSubtitle({ subtitle: step.subtitle ?? '', setSubtitle })
 
     if (step.cameraTarget) setCameraTarget(step.cameraTarget)
     else setCameraTarget(null)
