@@ -1,7 +1,7 @@
 const AZURE_SPEECH_KEY = process.env.AZURE_SPEECH_KEY!;
 const AZURE_REGION = process.env.AZURE_SPEECH_REGION!; 
 
-const VOICE = "en-KE-ChilembaNeural"; 
+const VOICE = "en-CA-LiamNeural"; 
 
 export async function convertTextToSpeech(text: string): Promise<ReadableStream<Uint8Array>>{
   if (!AZURE_SPEECH_KEY || !AZURE_REGION) {

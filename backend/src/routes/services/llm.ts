@@ -22,7 +22,7 @@ type DeepSeekResponse = {
 export async function generateOutline(question: string): Promise<string[]> {
   const prompt = buildOutlinePrompt(question);
 
-  const raw = await callOpenAI(prompt);
+  const raw = await callAzureOpenAI(prompt);
 
   const cleaned = raw
     .trim()
@@ -47,7 +47,7 @@ export async function generateStep(question: string, step_number:number, outline
   outline,
   previousStepJson ? JSON.stringify(previousStepJson) : undefined
 );
-const raw = await callOpenAI(prompt);
+const raw = await callAzureOpenAI(prompt);
 const cleaned = raw
   .trim()
   .replace(/^```json\s*/i, "")
@@ -212,7 +212,83 @@ async function callOpenAI(prompt: string) {
 }
 
 
+async function callAzureOpenAI(prompt: string) {
+  const AZURE_OPENAI_KEY = process.env.AZURE_OPENAI_KEY;
+  const AZURE_OPENAI_ENDPOINT = process.env.AZURE_OPENAI_ENDPOINT;
+  const AZURE_DEPLOYMENT = process.env.AZURE_OPENAI_DEPLOYMENT;
 
+  if (!AZURE_OPENAI_KEY || !AZURE_OPENAI_ENDPOINT || !AZURE_DEPLOYMENT) {
+    throw new Error("Azure OpenAI env vars missing");
+  }
+
+  const endpoint = `${AZURE_OPENAI_ENDPOINT}/openai/deployments/${AZURE_DEPLOYMENT}/chat/completions?api-version=2025-01-01-preview`;
+
+  const requestBody = {
+    messages: [
+      { role: "user", content: prompt }
+    ],
+    temperature: 0,
+  };
+
+  const t0 = Date.now();
+  const response = await fetch(endpoint, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "api-key": AZURE_OPENAI_KEY,
+    },
+    body: JSON.stringify(requestBody),
+  });
+
+  if (!response.ok) {
+    const err = await response.text();
+    throw new Error(`Azure OpenAI error ${response.status}: ${err}`);
+  }
+
+  const rawData: any = await response.json();
+  const t1 = Date.now();
+  console.log(`[Backend] [Azure LLM] Response received in ${t1 - t0}ms`);
+
+  let textResponse = "";
+
+  try {
+    const choices = rawData?.choices ?? [];
+    for (const choice of choices) {
+      const content = choice?.message?.content;
+      if (typeof content === "string") {
+        textResponse += content;
+      }
+    }
+  } catch {
+    throw new Error("Failed to parse Azure OpenAI response");
+  }
+
+  textResponse = (textResponse || "").trim();
+
+  if (!textResponse) {
+    throw new Error("Azure OpenAI returned no output");
+  }
+
+  // Cleanup (same as your original)
+  textResponse = textResponse
+    .replace(/^```json\s*/i, "")
+    .replace(/^```\s*/i, "")
+    .replace(/\s*```$/, "")
+    .trim()
+    .replace(/Math\.PI/g, "3.14159265359");
+
+  try {
+    const repaired = jsonrepair(textResponse);
+    if (repaired !== textResponse) {
+      console.log("[Azure LLM] jsonrepair fixed JSON");
+      textResponse = repaired;
+    }
+  } catch (e: any) {
+    console.error("[Azure LLM] jsonrepair failed:", e?.message || e);
+  }
+
+  return textResponse;
+}
 
 
 // export async function generateTimeline(question: string) {
