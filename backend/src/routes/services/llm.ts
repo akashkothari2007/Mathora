@@ -142,7 +142,7 @@ async function callOpenAI(prompt: string) {
   if (!OPENAI_API_KEY) throw new Error("OPENAI_API_KEY is missing");
 
   const requestBody = {
-      model: "gpt-4.1-mini",
+      model: "gpt-4o-mini",
       input: [{ role: "user", content: prompt }],
       temperature: 0,
   };
