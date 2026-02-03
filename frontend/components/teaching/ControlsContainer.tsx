@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { unlockAudio } from '../math/timeline/handleSubtitle'
 
 type Props = {
     setStepIndex: React.Dispatch<React.SetStateAction<number>>
@@ -58,6 +59,7 @@ export default function ControlsContainer({setStepIndex, reset, stepIndex, avail
                             const percent = (e.clientX - rect.left) / rect.width
                             const newStep = Math.round(percent * (totalSteps - 1))
                             if (newStep < availableSteps) {
+                                unlockAudio();
                                 setStepIndex(newStep)
                             }
                         }}
