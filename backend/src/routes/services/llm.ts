@@ -221,8 +221,10 @@ async function callAzureOpenAI(prompt: string) {
     throw new Error("Azure OpenAI env vars missing");
   }
 
-  const endpoint = `${AZURE_OPENAI_ENDPOINT}/openai/deployments/${AZURE_DEPLOYMENT}/chat/completions?api-version=2025-01-01-preview`;
+  // Remove trailing slash from env var if it exists
+const baseUrl = AZURE_OPENAI_ENDPOINT.replace(/\/+$/, ""); 
 
+const endpoint = `${baseUrl}/openai/deployments/${AZURE_DEPLOYMENT}/chat/completions?api-version=2025-01-01-preview`;
   const requestBody = {
     messages: [
       { role: "user", content: prompt }
