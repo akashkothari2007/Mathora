@@ -1,4 +1,4 @@
-import type { Step } from "./schema";
+import type { Action, Step } from "./schema";
 import type { Response } from "express";
 
 export type Session = {
@@ -9,6 +9,7 @@ export type Session = {
     prevStep: Step | null;
 
     subscribers: Set<Response>;
+    objects: Record<string, NonNullable<Action["object"]>>
 }
 
 const sessions = new Map<string, Session>();
@@ -33,7 +34,9 @@ export function createSession(args: {
         currentStep: 1,
         prevStep: args.firstStep,
         subscribers: new Set(),
+        objects: {},
     }
+    update_object_state(session, args.firstStep);
     sessions.set(id, session)
     return session
 }
@@ -61,6 +64,8 @@ export function deleteSession(sessionId: string) {
   
     s.prevStep = step;
     s.currentStep += 1;
+
+    update_object_state(s, step)
     console.log(`[Backend] [SSE] Committed step ${s.currentStep}, now at step ${s.currentStep + 1}/${s.outline.length}`);
   }
   //if steps run out stop streaming
@@ -162,3 +167,18 @@ export function broadcastStep(sessionId: string, step: Step) {
   }
 
 
+export function update_object_state(session: Session, step: Step){
+    if (!step.actions) return;
+    for (const action of step.actions) {
+      if (action.type === "add" && action.object) {
+        session.objects[action.object.id] = action.object;
+    }
+      else if (action.type === "update" && action.id && action.props) {
+        session.objects[action.id].props = {
+          ...session.objects[action.id].props, 
+          ...action.props,};
+    } else if (action.type === "remove" && action.id) {
+        delete session.objects[action.id];
+    }
+  }
+}
