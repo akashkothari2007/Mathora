@@ -55,14 +55,15 @@ export default function ControlsContainer({setStepIndex, reset, stepIndex, avail
                     <div 
                         className="relative h-1.5 sm:h-2 rounded-full bg-white/[0.08] cursor-pointer group"
                         onClick={(e) => {
+                            async () => {
                             const rect = e.currentTarget.getBoundingClientRect()
                             const percent = (e.clientX - rect.left) / rect.width
                             const newStep = Math.round(percent * (totalSteps - 1))
                             if (newStep < availableSteps) {
-                                unlockAudio();
+                                await unlockAudio();
                                 setStepIndex(newStep)
                             }
-                        }}
+                        }}}
                     >
                         {/* Buffered (available) */}
                         <div 

@@ -25,9 +25,14 @@ export function useTimelineController({
   executed,
 }: UseTimelineControllerProps) {
   
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   // execute the current step exactly once
   useEffect(() => {
 
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+    }
     if (stepIndex < 0 || stepIndex >= steps.length) return
     if (executed.current.has(stepIndex)) return
 
@@ -37,7 +42,7 @@ export function useTimelineController({
     console.log('Executing step', stepIndex, step)
 
     // subtitle + camera are step-level now
-    handleSubtitle({ subtitle: step.subtitle ?? '', setSubtitle })
+    handleSubtitle({ subtitle: step.subtitle ?? '', setSubtitle , audioRef})
 
     if (step.cameraTarget) setCameraTarget(step.cameraTarget)
     else setCameraTarget(null)
@@ -64,6 +69,15 @@ export function useTimelineController({
       }
     }
   }, [stepIndex, steps, setGraphObjects, setSubtitle, setCameraTarget])
+  // cleanup audio when component unmounts
+  useEffect(() => {
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.currentTime = 0;
+      }
+    }
+  }, [])
 
 
 }

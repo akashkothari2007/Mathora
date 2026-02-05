@@ -1,9 +1,10 @@
 type Props = {
     subtitle: string;
     setSubtitle: (subtitle: string) => void;
+    audioRef: React.RefObject<HTMLAudioElement | null>;
 }
 
-export async function handleSubtitle({ subtitle, setSubtitle }: Props) {
+export async function handleSubtitle({ subtitle, setSubtitle, audioRef }: Props) {
     setSubtitle(subtitle);
     if (!subtitle) return;
     try {
@@ -22,9 +23,9 @@ export async function handleSubtitle({ subtitle, setSubtitle }: Props) {
         
         const blob = await res.blob();
         const url = URL.createObjectURL(blob);
-        const audio = new Audio(url);
+        audioRef.current = new Audio(url);
         try {
-            await audio.play();
+            await audioRef.current.play();
         } catch (error) {
             speakSubtitle(subtitle);
             console.error(error);
