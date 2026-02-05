@@ -35,6 +35,7 @@ Rules:
 - This is step ${stepNumber + 1} of ${outline.length}
 - Follow outline step: "${outline[stepNumber]}"
 - width and height are hard borders of the view keep obj inside
+- No unnecessary objects sole purpose is teaching
 
 Context:
 PreviousStep: ${previousStepsJson ?? "null"}
