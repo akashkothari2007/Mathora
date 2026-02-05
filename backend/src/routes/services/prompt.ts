@@ -22,7 +22,7 @@ Action:
 
 GraphObject types:
 - function:        { f, xmin?=-100, xmax?=100, color? }
-- point:           { position: {x, y}, color?, animateTo?, followFunction? }
+- point:           { position: {x, y}, color?, animateTo?, followFunction?: {f: string, startX: number, endX: number} }
 - label:           { text, position: {x, y}, color? }
 - area:            { f, g?, xmin, xmax, color?, opacity? }
 - slidingTangent:  { f, startX, endX, duration?, color? }
