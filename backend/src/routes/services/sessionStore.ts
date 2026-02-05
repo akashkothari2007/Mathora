@@ -174,9 +174,11 @@ export function update_object_state(session: Session, step: Step){
         session.objects[action.object.id] = action.object;
     }
       else if (action.type === "update" && action.id && action.props) {
-        session.objects[action.id].props = {
-          ...session.objects[action.id].props, 
-          ...action.props,};
+        if (session.objects[action.id]) {
+          session.objects[action.id].props = {
+            ...session.objects[action.id].props, 
+            ...action.props,};
+        }
     } else if (action.type === "remove" && action.id) {
         delete session.objects[action.id];
     }

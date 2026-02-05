@@ -49,7 +49,8 @@ export async function startSessionRunner(sessionId: string) {
           s.prompt,
           stepIndex,
           s.outline,
-          s.prevStep
+          s.prevStep,
+          s.objects
         );
   
         broadcastStep(sessionId, step);

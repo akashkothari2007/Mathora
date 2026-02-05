@@ -39,7 +39,7 @@ export async function generateOutline(question: string): Promise<string[]> {
   return parsed.outline;
 }
 
-export async function generateStep(question: string, step_number:number, outline: string[], previousStepJson?: any){
+export async function generateStep(question: string, step_number:number, outline: string[], previousStepJson?: any, objects = {}){
 
   const prompt = buildPrompt(
   question,

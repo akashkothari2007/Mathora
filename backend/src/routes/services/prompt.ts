@@ -1,9 +1,11 @@
 import strict from "assert/strict";
+import { Action } from "./schema";
 export function buildPrompt(
   userQuestion: string,
   stepNumber: number,
   outline: string[],
-  previousStepsJson?: string
+  previousStepsJson?: string,
+  objects?: Record<string, NonNullable<Action["object"]>>
 ) {
   return `
 You are generating ONE math visualization step.
@@ -40,7 +42,9 @@ Rules:
 - No unnecessary graph objects or whiteboard lines, sole purpose IS TEACHING NOT SHOWING OFF, if no graph is required don't add
 
 Context:
-PreviousStep: ${previousStepsJson ?? "null"}
+PreviousStep: ${previousStepsJson ?? "null"},
+
+Current Objects in the scene: ${JSON.stringify(objects ?? {})},
 
 Question:
 ${JSON.stringify(userQuestion)}
