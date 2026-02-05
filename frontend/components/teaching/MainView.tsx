@@ -6,7 +6,7 @@ import { useRef, useState } from 'react'
 import { CameraTarget } from '../math/types/cameraTarget'
 import { useTimelineController } from '../math/timeline/TimelineController'
 import ControlsContainer from './ControlsContainer'
-
+import WhiteboardPanel from './WhiteboardPanel'
 
 type Props = {
     showGraph: boolean
@@ -33,13 +33,14 @@ export default function MainView({
         const executed = useRef<Set<number>>(new Set()) //what has been executed so far
 
         // add whiteboard funcs here
-
+        const [whiteboardLines, setWhiteboardLines] = useState<string[]>([]) //latex lines
 
         // reset all animations, set everything to initial state
         const reset = () => {
             executed.current.clear()
             setGraphObjects([])
             setCameraTarget(null)
+            setWhiteboardLines([])
             setStepIndex(-1)
             requestAnimationFrame(() => {
                 setStepIndex(0)
@@ -48,11 +49,11 @@ export default function MainView({
 
         
         // use timeline controller to handle the timeline
-        useTimelineController({steps: steps, setGraphObjects, setSubtitle, setCameraTarget, stepIndex, executed})    //use timeline controller to handle the timeline
+        useTimelineController({steps: steps, setGraphObjects, setSubtitle, setCameraTarget, stepIndex, executed, setWhiteboardLines})    //use timeline controller to handle the timeline
 
         const panels = [
         showGraph && <GraphPanel key = "graph" graphObjects={graphObjects} cameraTarget={cameraTarget} />,
-        showWhiteboard && <Panel key = "whiteboard" title = "Whiteboard" />,
+        showWhiteboard && <WhiteboardPanel key = "whiteboard" whiteboardLines={whiteboardLines} />,
         showExplanation && <Panel key = "explanation" title = "Explanation" />,
     ].filter(Boolean)
 

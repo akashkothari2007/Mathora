@@ -68,6 +68,7 @@ export const StepSchema = z.object({
   subtitle: CleanedString.optional(),
   cameraTarget: CameraTargetSchema.nullable().optional(),
   actions: z.array(ActionSchema).optional(),
+  whiteboardLines: z.array(z.string()).optional(),
 })
 
 export const TimelineSchema = z.array(StepSchema);

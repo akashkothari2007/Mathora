@@ -13,7 +13,7 @@ type UseTimelineControllerProps = {
   setSubtitle: React.Dispatch<React.SetStateAction<string>>
   setCameraTarget: React.Dispatch<React.SetStateAction<CameraTarget | null>>
   executed: React.RefObject<Set<number>>
-  
+  setWhiteboardLines: React.Dispatch<React.SetStateAction<string[]>>
 }
 
 export function useTimelineController({
@@ -23,18 +23,21 @@ export function useTimelineController({
   setCameraTarget,
   stepIndex,
   executed,
+  setWhiteboardLines,
 }: UseTimelineControllerProps) {
   
   const audioRef = useRef<HTMLAudioElement | null>(null);
   // execute the current step exactly once
   useEffect(() => {
 
+    
+    if (stepIndex < 0 || stepIndex >= steps.length) return
+    if (executed.current.has(stepIndex)) return
+
     if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current.currentTime = 0;
     }
-    if (stepIndex < 0 || stepIndex >= steps.length) return
-    if (executed.current.has(stepIndex)) return
 
     executed.current.add(stepIndex)
 
@@ -43,6 +46,7 @@ export function useTimelineController({
 
     // subtitle + camera are step-level now
     handleSubtitle({ subtitle: step.subtitle ?? '', setSubtitle , audioRef})
+    setWhiteboardLines(prev => [...prev, ...(step.whiteboardLines ?? [])])
 
     if (step.cameraTarget) setCameraTarget(step.cameraTarget)
     else setCameraTarget(null)

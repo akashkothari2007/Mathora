@@ -11,8 +11,8 @@ type Props = { prompt: string; onNewChat: () => void };
 export default function TeachingView({ prompt, onNewChat }: Props) {
   const [showSidebar, setShowSidebar] = useState(false);
   const [showGraph, setShowGraph] = useState(true);
-  const [showWhiteboard, setShowWhiteboard] = useState(false);
-  const [showExplanation, setShowExplanation] = useState(true);
+  const [showWhiteboard, setShowWhiteboard] = useState(true);
+  const [showExplanation, setShowExplanation] = useState(false);
   const [subtitle, setSubtitle] = useState(" ");
 
   const testSteps = resolveTestTimeline(prompt);

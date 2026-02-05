@@ -3,7 +3,11 @@ import { Step } from "../../types/steps";
 export const pointAndLabelTestTimeline: Step[] = [
   {
     subtitle: "Add a point at the origin.",
-    cameraTarget: { position: [0, 0, 0], lookAt: [0, 0, 0] },
+    cameraTarget: { position: [0, 0, 0], center: [0, 0, 0] },
+    whiteboardLines: [
+      String.raw`y=\frac{1}{2}x^2`,
+      String.raw`\text{Domain: }[-4,4]`,
+    ],
     actions: [
       {
         type: "add",
@@ -33,7 +37,7 @@ export const pointAndLabelTestTimeline: Step[] = [
 
   {
     subtitle: "Animate the point to (2, 1).",
-    cameraTarget: { position: [2, 1, 0], lookAt: [2, 1, 0] },
+    cameraTarget: { position: [2, 1, 0], center: [2, 1, 0] },
     actions: [
       {
         type: "update",
@@ -58,7 +62,7 @@ export const pointAndLabelTestTimeline: Step[] = [
 
   {
     subtitle: "Point follows the curve y = sin(x) from -π to π.",
-    cameraTarget: { position: [2, 1, 0], lookAt: [-Math.PI, 0, 0] },
+    cameraTarget: { position: [2, 1, 0], center: [-Math.PI, 0, 0] },
     actions: [
       {
         type: "update",

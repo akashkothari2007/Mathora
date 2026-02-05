@@ -30,6 +30,9 @@ export const functionPlotTimeline: Step[] = [
         },
       },
     ],
+    whiteboardLines: [
+      String.raw`y = x`,
+    ],
   },
 
  
@@ -50,6 +53,9 @@ export const functionPlotTimeline: Step[] = [
           text: "y = x²"
         }
       }
+    ],
+    whiteboardLines: [
+      String.raw`\text{Domain }[-4,4]`,
     ],
   },
 

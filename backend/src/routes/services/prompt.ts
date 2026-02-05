@@ -13,6 +13,7 @@ Return ONE JSON object matching:
   subtitle?: string,
   cameraTarget?: { center?:[n,n,n],width?:n,height?:n,} | null,
   actions?: Action[]
+  whiteboardLines?: string[]
 }
 
 Action:
@@ -29,13 +30,14 @@ GraphObject types:
 
 Rules:
 - f/g are JS expressions like "x*x" or "Math.sin(x)"
+- whiteboardLines are LaTeX strings only 
 - Use 3.14159265359 (never Math.PI)
 - IDs: f1,f2,p1,area1,t1,lbl1
 - subtitle = what you'd say aloud to teach
 - This is step ${stepNumber + 1} of ${outline.length}
 - Follow outline step: "${outline[stepNumber]}"
 - width and height are hard borders of the view keep obj inside
-- No unnecessary objects sole purpose is teaching
+- No unnecessary graph objects or whiteboard lines, sole purpose IS TEACHING NOT SHOWING OFF, if no graph is required don't add
 
 Context:
 PreviousStep: ${previousStepsJson ?? "null"}
