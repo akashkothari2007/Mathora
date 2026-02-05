@@ -10,6 +10,7 @@ export type Session = {
 
     subscribers: Set<Response>;
     objects: Record<string, NonNullable<Action["object"]>>
+    whiteboardLines: string[];
 }
 
 const sessions = new Map<string, Session>();
@@ -35,6 +36,7 @@ export function createSession(args: {
         prevStep: args.firstStep,
         subscribers: new Set(),
         objects: {},
+        whiteboardLines: [],
     }
     update_object_state(session, args.firstStep);
     sessions.set(id, session)
@@ -66,6 +68,9 @@ export function deleteSession(sessionId: string) {
     s.currentStep += 1;
 
     update_object_state(s, step)
+    if (step.whiteboardLines) {
+    s.whiteboardLines = s.whiteboardLines.concat(step.whiteboardLines);
+  }
     console.log(`[Backend] [SSE] Committed step ${s.currentStep}, now at step ${s.currentStep + 1}/${s.outline.length}`);
   }
   //if steps run out stop streaming

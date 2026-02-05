@@ -5,7 +5,8 @@ export function buildPrompt(
   stepNumber: number,
   outline: string[],
   previousStepsJson?: string,
-  objects?: Record<string, NonNullable<Action["object"]>>
+  objects?: Record<string, NonNullable<Action["object"]>>,
+  whiteboardLines?: string[]
 ) {
   return `
 You are generating ONE math visualization step.
@@ -45,6 +46,8 @@ Context:
 PreviousStep: ${previousStepsJson ?? "null"},
 
 Current Objects in the scene: ${JSON.stringify(objects ?? {})},
+
+Current Whiteboard Lines: ${JSON.stringify(whiteboardLines ?? [])},
 
 Question:
 ${JSON.stringify(userQuestion)}

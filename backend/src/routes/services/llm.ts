@@ -1,4 +1,4 @@
-import { TimelineSchema } from "./schema";
+import { Action, TimelineSchema } from "./schema";
 import { buildPrompt } from "./prompt";
 import { buildOutlinePrompt } from "./prompt";
 import dotenv from "dotenv";
@@ -39,13 +39,15 @@ export async function generateOutline(question: string): Promise<string[]> {
   return parsed.outline;
 }
 
-export async function generateStep(question: string, step_number:number, outline: string[], previousStepJson?: any, objects = {}){
+export async function generateStep(question: string, step_number:number, outline: string[], previousStepJson?: any, objects?: Record<string, NonNullable<Action["object"]>>, whiteboardLines?: string[]){
 
   const prompt = buildPrompt(
   question,
   step_number,
   outline,
-  previousStepJson ? JSON.stringify(previousStepJson) : undefined
+  previousStepJson ? JSON.stringify(previousStepJson) : undefined,
+  objects,
+  whiteboardLines
 );
 const raw = await callAzureOpenAI(prompt);
 const cleaned = raw
