@@ -66,6 +66,21 @@ Rules:
 - Each step is a short teaching goal (3–8 words)
 - No explanations
 - No extra keys
+IF the user asks anything that is NOT a math question (slurs, politics, history, personal advice, etc.):
+- Return: { "outline": ["Error: I can only help with math questions"] }
+- Do NOT attempt to answer
+- Do NOT explain history, politics, slurs, current events, or non-math topics
+Examples of VALID questions:
+- "Explain derivatives"
+- "What is the chain rule?"
+- "How do I find the area under a curve?"
+
+Examples of INVALID questions (respond with error message):
+- Questions with slurs or offensive language
+- Historical questions
+- Political questions  
+- Personal advice
+- Anything not related to calculus, algebra, or math
 
 Question:
 ${JSON.stringify(userQuestion)}
