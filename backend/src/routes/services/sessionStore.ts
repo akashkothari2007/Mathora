@@ -11,6 +11,7 @@ export type Session = {
     subscribers: Set<Response>;
     objects: Record<string, NonNullable<Action["object"]>>
     whiteboardLines: string[];
+    cleanupTimer?: NodeJS.Timeout;
 }
 
 const sessions = new Map<string, Session>();
@@ -37,7 +38,17 @@ export function createSession(args: {
         subscribers: new Set(),
         objects: {},
         whiteboardLines: [],
+        cleanupTimer: undefined,
     }
+    //WEIRD TIMER STUFF
+    session.cleanupTimer = setTimeout(() => {
+        const s = sessions.get(id);
+        if (s && s.subscribers.size === 0) {
+            console.log(`[Backend] Auto-deleting unused session ${id}`);
+            deleteSession(id);
+        }
+    }, 2 * 60 * 1000);
+
     update_object_state(session, args.firstStep);
     sessions.set(id, session)
     return session
@@ -55,7 +66,10 @@ export function deleteSession(sessionId: string) {
         res.end();
       } catch {}
     }
-  
+    if (s.cleanupTimer) {
+        clearTimeout(s.cleanupTimer);
+        s.cleanupTimer = undefined;
+    }
     sessions.delete(sessionId);
   }
 
@@ -83,8 +97,12 @@ export function deleteSession(sessionId: string) {
 
   //subscriber management
   export function addSubscriber(sessionId: string, res: Response) {
-    const s = sessions.get(sessionId);
+    const s = sessions.get(sessionId); 
     if (!s) throw new Error("Session not found");
+    if (s.cleanupTimer) {
+        clearTimeout(s.cleanupTimer);
+        s.cleanupTimer = undefined;
+    }    
     s.subscribers.add(res);
   }
   
@@ -151,7 +169,7 @@ export function broadcastStep(sessionId: string, step: Step) {
     }
   
     // delete session
-    sessions.delete(sessionId);
+    deleteSession(sessionId);
   }
   
   // error for frontend to see
