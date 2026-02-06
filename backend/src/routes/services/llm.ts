@@ -1,4 +1,4 @@
-import { Action, TimelineSchema } from "./schema";
+import { Action, Step, TimelineSchema } from "./schema";
 import { buildPrompt } from "./prompt";
 import { buildOutlinePrompt } from "./prompt";
 import dotenv from "dotenv";
@@ -9,6 +9,13 @@ dotenv.config();
 
 const API_KEY = process.env.DEEPSEEK_API_KEY;
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+
+
+const fallbackStep: Step = {
+  subtitle: "Unable to generate this step.",
+  actions: [] as Action[],
+  whiteboardLines: ["\\text{Step generation failed}"]
+};
 
 type DeepSeekResponse = {
   choices?: {
@@ -40,7 +47,7 @@ export async function generateOutline(question: string): Promise<string[]> {
 }
 
 export async function generateStep(question: string, step_number:number, outline: string[], previousStepJson?: any, objects?: Record<string, NonNullable<Action["object"]>>, whiteboardLines?: string[]){
-
+  let max_attempts = 3;
   const prompt = buildPrompt(
   question,
   step_number,
@@ -49,16 +56,30 @@ export async function generateStep(question: string, step_number:number, outline
   objects,
   whiteboardLines
 );
+for (let attempt = 1; attempt <= max_attempts; attempt++) {
 const raw = await callAzureOpenAI(prompt);
 const cleaned = raw
   .trim()
   .replace(/^```json\s*/i, "")
   .replace(/^```\s*/i, "")
   .replace(/\s*```$/, "");
-const parsed = StepSchema.parse(JSON.parse(cleaned));
-return parsed;
+try {
+  const parsed = StepSchema.parse(JSON.parse(cleaned)); //THIS LINE TEST THINGY
+  return parsed;
+  }
+catch (e:any) {
+  if (attempt === max_attempts) {
+    console.error(`[Backend] [LLM] Failed to parse step after ${max_attempts} attempts. Last error:`, e?.message || e);
+    console.error(`[Backend] [LLM] Last response text (first 800 chars):`, cleaned.substring(0, 800));
+    return fallbackStep;
+    }
+  else{
+    continue;
+   }
+  }
+  }
+  return fallbackStep;
 }
-
 
 async function callDeepSeek(prompt:string){
   const endpoint = "https://api.deepseek.com/v1/chat/completions";
