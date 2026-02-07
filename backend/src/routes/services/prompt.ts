@@ -76,6 +76,20 @@ CRITICAL RULES:
 - If no visual needed: "actions": []
 - Max 2-3 objects, remove irrelevant ones first
 
+SUBTITLE RULES (CRITICAL):
+- Subtitles are what the user HEARS (via text-to-speech)
+- This is your ONLY chance to explain the concept verbally
+- Make subtitles 3-5 sentences, NOT 1 sentence
+- Explain WHAT we're doing, WHY it matters, and WHAT to notice
+
+GOOD SUBTITLE (derivative intro):
+"Let's start by understanding what a derivative actually means. Imagine you're driving a car - your position changes over time. The derivative tells us your speed at any exact moment. We're going to use the formal definition with limits, which might look scary, but I'll walk you through every step and show you why it makes sense."
+
+BAD SUBTITLE (same concept):
+"Let's explore the derivative definition."
+
+THE SUBTITLE IS THE TEACHING. Make it detailed.
+
 Current objects: ${JSON.stringify(objects ?? {})}
 Previous: ${previousStepsJson ?? "null"}
 Question: ${JSON.stringify(userQuestion)}
