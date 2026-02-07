@@ -30,8 +30,51 @@ const CameraTargetSchema = z.object({
 }).strict();
 
 const PointPropsSchema = z.object({
-  x: z.number(),
-  y: z.number(),
+  position: z.object({
+    x: z.number(),
+    y: z.number(),
+  }).strict(),
+  color: z.string().optional(),
+  animateTo: z.object({
+    x: z.number(),
+    y: z.number(),
+  }).optional(),
+  followFunction: z.object({
+    f: FunctionExprSchema,
+    startX: z.number(),
+    endX: z.number(),
+  }).optional(),
+}).strict();
+
+
+const FunctionPropsSchema = z.object({
+  f: FunctionExprSchema,
+  xmin: z.number().optional(),
+  xmax: z.number().optional(),
+  steps: z.number().optional(),
+  color: z.string().optional(),
+}).strict();
+
+
+const SlidingTangentPropsSchema = z.object({
+  f: FunctionExprSchema,
+  startX: z.number(),
+  endX: z.number(),
+  duration: z.number().optional(),
+  color: z.string().optional(),
+  xmin: z.number().optional(),
+  xmax: z.number().optional(),
+}).strict();
+
+
+const AreaPropsSchema = z.object({
+  f: FunctionExprSchema,
+  g: FunctionExprSchema.optional(),
+  xmin: z.number(),
+  xmax: z.number(),
+  steps: z.number().optional(),
+  color: z.string().optional(),
+  opacity: z.number().optional(),
 }).strict();
 
 const LabelPropsSchema = z.object({
@@ -39,23 +82,10 @@ const LabelPropsSchema = z.object({
   position: z.object({
     x: z.number(),
     y: z.number(),
-  }),
+  }).strict(),
+  color: z.string().optional(),
+  fontSize: z.number().optional(),
 }).strict();
-
-const FunctionPropsSchema = z.object({
-  f: FunctionExprSchema,
-}).strict();
-
-const SlidingTangentPropsSchema = z.object({
-  f: FunctionExprSchema,
-  xmin: z.number(),
-  xmax: z.number(),
-}).strict();
-
-const AreaPropsSchema = z.object({
-  f: FunctionExprSchema,
-}).strict();
-
 
 
 export const ObjectSchema = z.discriminatedUnion("type", [
