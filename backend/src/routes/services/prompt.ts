@@ -1,5 +1,9 @@
 import strict from "assert/strict";
 import { Action } from "./schema";
+
+
+
+
 export function buildPrompt(
   userQuestion: string,
   stepNumber: number,
@@ -9,48 +13,72 @@ export function buildPrompt(
   whiteboardLines?: string[]
 ) {
   return `
-You are generating ONE math visualization step.
+You are step ${stepNumber + 1}/${outline.length}: "${outline[stepNumber]}"
 
-Return ONE JSON object matching:
+TEACH LIKE A HUMAN TUTOR:
+- Explain WHY before formulas (build intuition first)
+- Show EVERY algebraic step (don't skip work)
+- Connect math to real understanding
+- One clear idea per step
+
+Return JSON:
 {
-  subtitle?: string,
-  cameraTarget?: { center?:[n,n,n],width?:n,height?:n,} | null,
-  actions?: Action[]
-  whiteboardLines?: string[]
+  "subtitle": "1-2 sentences explaining what we're doing and why",
+  "actions": [...],
+  "whiteboardLines": [...]
 }
 
-Action:
-- add:    { type:"add", object:{ id, type, props } }
-- update: { type:"update", id, props }
-- remove: { type:"remove", id }
+ACTIONS (max 2-3 per step):
+- {"type":"add", "object":{"id":"f1", "type":"function", "props":{"f":"x*x", "color":"blue"}}}
+- {"type":"remove", "id":"f1"}
+- {"type":"update", "id":"f1", "props":{...}}
 
-GraphObject types:
-- function:        { f, xmin?=-100, xmax?=100, color? }
-- point:           { position: {x, y}, color?, animateTo?, followFunction?: {f: string, startX: number, endX: number} }
-- label:           { text, position: {x, y}, color? }
-- area:            { f, g?, xmin, xmax, color?, opacity? }
-- slidingTangent:  { f, startX, endX, duration?, color? }
+Types: function, point, label, area, slidingTangent
+REMOVE old objects when moving to new concept
+Use labels ONLY if not on whiteboard
 
-Rules:
-- f/g are JS expressions like "x*x" or "Math.sin(x)"
-- whiteboardLines are LaTeX strings only 
-- Use 3.14159265359 (never Math.PI)
-- IDs: f1,f2,p1,area1,t1,lbl1
-- subtitle = what you'd say aloud to teach
-- This is step ${stepNumber + 1} of ${outline.length}
-- Follow outline step: "${outline[stepNumber]}"
-- width and height are hard borders of the view keep obj inside
-- No unnecessary graph objects or whiteboard lines, sole purpose IS TEACHING NOT SHOWING OFF, if no graph is required don't add
+WHITEBOARD (LaTeX, 2-4 NEW lines):
+Current: ${JSON.stringify(whiteboardLines ?? [])}
+- Don't repeat existing lines
+- Show each algebra step
+- Example: "\\lim_{h \\to 0}" not "lim"
 
-Context:
-PreviousStep: ${previousStepsJson ?? "null"},
+GOOD EXAMPLE:
+{
+  "subtitle": "Using the limit definition, we expand (x+h)² and see what cancels when h approaches zero",
+  "actions": [
+    {"type":"add", "object":{"id":"f1", "type":"function", "props":{"f":"x*x", "color":"blue"}}}
+  ],
+  "whiteboardLines": [
+    "f'(x) = \\lim_{h \\to 0} \\frac{(x+h)^2 - x^2}{h}",
+    "= \\lim_{h \\to 0} \\frac{x^2 + 2xh + h^2 - x^2}{h}",
+    "= \\lim_{h \\to 0} \\frac{h(2x + h)}{h}",
+    "= \\lim_{h \\to 0} (2x + h) = 2x"
+  ]
+}
 
-Current Objects in the scene: ${JSON.stringify(objects ?? {})},
+BAD EXAMPLE:
+{
+  "subtitle": "The derivative is 2x",
+  "actions": [
+    {"type":"add", "object":{"id":"f1", ...}},
+    {"type":"add", "object":{"id":"f2", ...}},
+    {"type":"add", "object":{"id":"area1", ...}},
+    {"type":"add", "object":{"id":"lbl1", ...}}
+  ],
+  "whiteboardLines": ["f'(x) = 2x"]
+}
 
-Current Whiteboard Lines: ${JSON.stringify(whiteboardLines ?? [])},
+CRITICAL RULES:
+- Use 3.14159265359 NOT Math.PI
+- f/g as JS: "x*x", "Math.sin(x)", "x*x*x"
+- IDs: f1, f2, tan1, pt1, area1, lbl1
+- If no visual needed: "actions": []
+- Max 2-3 objects, remove irrelevant ones first
 
-Question:
-${JSON.stringify(userQuestion)}
+Current objects: ${JSON.stringify(objects ?? {})}
+Previous: ${previousStepsJson ?? "null"}
+Question: ${JSON.stringify(userQuestion)}
 `.trim();
 }
 
