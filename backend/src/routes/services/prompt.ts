@@ -21,6 +21,12 @@ TEACH LIKE A HUMAN TUTOR:
 - Connect math to real understanding
 - One clear idea per step
 
+Return ONLY raw JSON.
+Do NOT use \`\`\`json blocks.
+Do NOT add explanations before or after.
+If the output is not valid JSON, the step will fail.
+
+
 Return JSON:
 {
   "subtitle": "1-2 sentences explaining what we're doing and why",
@@ -29,13 +35,42 @@ Return JSON:
 }
 
 ACTIONS (max 2-3 per step):
-- {"type":"add", "object":{"id":"f1", "type":"function", "props":{"f":"x*x", "color":"blue"}}}
+- {"type":"add","object":{"id":"f1","type":"function","props":{"f":"x*x"}}}
 - {"type":"remove", "id":"f1"}
 - {"type":"update", "id":"f1", "props":{...}}
 
 Types: function, point, label, area, slidingTangent
 REMOVE old objects when moving to new concept
 Use labels ONLY if not on whiteboard
+
+WHEN TO USE OBJECTS:
+
+- function → whenever a graph is discussed
+- point → when evaluating f(a) or mentioning a specific coordinate
+- slidingTangent → when talking about derivative at a point
+- area → when discussing area under curve or integrals
+- label → only for important graph annotations
+- USE AS MANY AS NECESSARY AS LONG AS THEY HELP TO TEACH CLEARLY
+
+PROPS FORMATS:
+function:
+{"f": "x*x"}
+point:
+{"x": 1, "y": 2}
+label:
+{"text": "A", "position": {"x": 1, "y": 2}}
+slidingTangent:
+{"f": "x*x", "xmin": -5, "xmax": 5}
+area:
+{"f": "x*x"}
+- Updates must include FULL props for that object type.
+- Do NOT send partial props.
+- Example (point update):
+  {"type":"update","id":"pt1","props":{"x":2,"y":4}}
+  
+IMPORTANT:
+- Do NOT add extra fields
+- Props must match exactly or the step will fail
 
 WHITEBOARD (LaTeX, 2-4 NEW lines):
 Current: ${JSON.stringify(whiteboardLines ?? [])}
@@ -47,7 +82,7 @@ GOOD EXAMPLE:
 {
   "subtitle": "Using the limit definition, we expand (x+h)² and see what cancels when h approaches zero",
   "actions": [
-    {"type":"add", "object":{"id":"f1", "type":"function", "props":{"f":"x*x", "color":"blue"}}}
+    {"type":"add","object":{"id":"f1","type":"function","props":{"f":"x*x"}}}
   ],
   "whiteboardLines": [
     "f'(x) = \\lim_{h \\to 0} \\frac{(x+h)^2 - x^2}{h}",

@@ -27,19 +27,71 @@ const CameraTargetSchema = z.object({
   center: z.tuple([z.number(), z.number(), z.number()]).optional(),
   width: z.number().optional(),
   height: z.number().optional(),
-});
+}).strict();
 
+const PointPropsSchema = z.object({
+  x: z.number(),
+  y: z.number(),
+}).strict();
+
+const LabelPropsSchema = z.object({
+  text: z.string(),
+  position: z.object({
+    x: z.number(),
+    y: z.number(),
+  }),
+}).strict();
+
+const FunctionPropsSchema = z.object({
+  f: FunctionExprSchema,
+}).strict();
+
+const SlidingTangentPropsSchema = z.object({
+  f: FunctionExprSchema,
+  xmin: z.number(),
+  xmax: z.number(),
+}).strict();
+
+const AreaPropsSchema = z.object({
+  f: FunctionExprSchema,
+}).strict();
+
+
+
+export const ObjectSchema = z.discriminatedUnion("type", [
+  z.object({
+    id: CleanedString,
+    type: z.literal("point"),
+    props: PointPropsSchema,
+  }),
+  z.object({
+    id: CleanedString,
+    type: z.literal("label"),
+    props: LabelPropsSchema,
+  }),
+  z.object({
+    id: CleanedString,
+    type: z.literal("function"),
+    props: FunctionPropsSchema,
+  }),
+  z.object({
+    id: CleanedString,
+    type: z.literal("slidingTangent"),
+    props: SlidingTangentPropsSchema,
+  }),
+  z.object({
+    id: CleanedString,
+    type: z.literal("area"),
+    props: AreaPropsSchema,
+  }),
+]);
 
 export const ActionSchema = z.object({
   type: z.enum(["add", "update", "remove", "wait"]),
   id: CleanedString.optional(),
   target: CameraTargetSchema.optional(),
 
-  object: z.object({
-    id: CleanedString,
-    type: z.enum(["function", "point", "label", "area", "slidingTangent"]),
-    props: z.record(z.string(), z.any()),
-  }).optional(),
+  object: ObjectSchema.optional(),
 
   props: z.record(z.string(), z.any()).optional(),
 }).superRefine((action, ctx) => {
