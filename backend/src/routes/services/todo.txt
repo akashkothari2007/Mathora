@@ -13,7 +13,6 @@ to generate the next step and then it broadcasts it, a fancy way of saying it fu
 then theres lots of error handling, when its done delete session delete subscriber
 just understand all ts make sure it makes sense cuz its rough rn
 
-Yo Saf here r some issues might be more:
 
 
 
@@ -21,3 +20,12 @@ QUICK SUMMARY
 
 1. also yk maybe fuck around with the prompt if u want to get it faster after the whole sse is done and fuck around with diff models
 2. also fucking look into like how we can make sure the math is right at the very end maybe a math model idk
+
+WHAT WE NEED TO DO:
+- Fix frontend ui its so shit lol and theres alot of errors that popup the voice to text doesnt say stuff properly sometimes and the whiteboard doesnt output the text right
+- uh the prompt i changed a bit its better but we need to make it easier for the user to understand and interact like rn it doesnt feel like its actually teaching
+it feels like its spewing random ass garbage at u
+- AI needs to be able to make its own axis and graph labels because it tries to explain angles in standard position with a normal x-y graph its retarded
+- functions probably need constraints because ai cant properly draw triangles or anything to explain stuff (also the ai explanation dont match)
+    - experimented with sm models and diff promps but big issue like the ai will say like lets visualize a triangle but then plot a sin function or something that doesnt help in that step
+    - ai also doesnt use the camera function at all always the same static camera
