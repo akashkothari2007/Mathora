@@ -68,9 +68,15 @@ area:
 - Example (point update):
   {"type":"update","id":"pt1","props":{"x":2,"y":4}}
   
-IMPORTANT:
-- Do NOT add extra fields
-- Props must match exactly or the step will fail
+GraphObject types (FOLLOW EXACTLY):
+- function: { f, xmin?, xmax?, color?, lineWidth? }
+- point: { position:{x,y}, color?, size?, animateTo?:{x,y}, followFunction?:{f,startX,endX,duration?} }
+- label: { text, position:{x,y}, color?, fontSize? }
+- area: { f, g?, xmin, xmax, color?, opacity? }
+- slidingTangent: { f, startX, endX, xmin?, xmax?, duration?, color? }
+CRITICAL: Points use position:{x,y} NOT direct x,y!
+CORRECT point:
+{"type":"add","object":{"id":"pt1","type":"point","props":{"position":{"x":1,"y":1},"color":"red"}}}
 
 WHITEBOARD (LaTeX, 2-4 NEW lines):
 Current: ${JSON.stringify(whiteboardLines ?? [])}
