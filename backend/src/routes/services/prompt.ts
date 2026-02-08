@@ -1,9 +1,6 @@
 import strict from "assert/strict";
 import { Action } from "./schema";
 
-
-
-
 export function buildPrompt(
   userQuestion: string,
   stepNumber: number,
@@ -13,126 +10,120 @@ export function buildPrompt(
   whiteboardLines?: string[]
 ) {
   return `
-You are step ${stepNumber + 1}/${outline.length}: "${outline[stepNumber]}"
+You are generating step ${stepNumber + 1} of ${outline.length}.
+GOAL: "${outline[stepNumber]}"
 
-TEACH LIKE A HUMAN TUTOR:
-- Explain WHY before formulas (build intuition first)
-- Show EVERY algebraic step (don't skip work)
-- Connect math to real understanding
-- One clear idea per step
+TEACHING PHILOSOPHY:
+- Explain WHY before showing formulas
+- Build from absolute basics - assume zero prior knowledge
+- Show EVERY algebraic step (never skip work)
+- Make intuition crystal clear before introducing math
 
-Return ONLY raw JSON.
-Do NOT use \`\`\`json blocks.
-Do NOT add explanations before or after.
-If the output is not valid JSON, the step will fail.
+SUBTITLE (3-5 sentences):
+This is what the user HEARS via voice.
+- Explain what we're doing this step
+- WHY it matters conceptually
+- What to notice in the visual/algebra
+- Use natural teaching language
 
+Example: "Let's see what a derivative really means. Imagine driving a car - your speedometer shows how fast you're going at each moment. That's exactly what a derivative does for any function: it tells us the rate of change at each point. We'll use the limit definition to find this mathematically."
 
-Return JSON:
-{
-  "subtitle": "1-2 sentences explaining what we're doing and why",
-  "actions": [...],
-  "whiteboardLines": [...]
-}
+GRAPH OBJECTS - USE SPARINGLY:
+Current objects: ${JSON.stringify(objects ?? {})}
 
-ACTIONS (max 2-3 per step):
-- {"type":"add","object":{"id":"f1","type":"function","props":{"f":"x*x"}}}
-- {"type":"remove", "id":"f1"}
-- {"type":"update", "id":"f1", "props":{...}}
+WHEN TO ADD OBJECTS:
+✅ function: When introducing a NEW function to visualize
+✅ point: When highlighting a SPECIFIC value (e.g., f(2) = 4)
+✅ slidingTangent: When showing derivative visually
+✅ area: When discussing integrals or area under curve
+✅ label: RARELY - only for critical annotations NOT on whiteboard
 
-Types: function, point, label, area, slidingTangent
-REMOVE old objects when moving to new concept
-Use labels ONLY if not on whiteboard
+❌ DON'T ADD:
+- Decorative objects that don't teach
+- Multiple functions unless comparing them
+- Points that aren't referenced in explanation
+- Labels that repeat whiteboard content
+- More than 6 objects per step
 
-WHEN TO USE OBJECTS:
+OBJECT ID RULES:
+- Each ID must be unique at any given time
+- Before adding an object with existing ID, REMOVE it first:
+  WRONG: [{"type":"add","object":{"id":"f1",...}}]
+  RIGHT: [{"type":"remove","id":"f1"},{"type":"add","object":{"id":"f1",...}}]
+- Or use different IDs: f1, f2, f3, etc.
 
-- function → whenever a graph is discussed
-- point → when evaluating f(a) or mentioning a specific coordinate
-- slidingTangent → when talking about derivative at a point
-- area → when discussing area under curve or integrals
-- label → only for important graph annotations
-- USE AS MANY AS NECESSARY AS LONG AS THEY HELP TO TEACH CLEARLY
+OBJECT FORMATS (EXACT SYNTAX):
 
-PROPS FORMATS:
 function:
-{"f": "x*x"}
+{"type":"add","object":{"id":"f1","type":"function","props":{"f":"x*x","color":"blue"}}}
+
 point:
-{"x": 1, "y": 2}
-label:
-{"text": "A", "position": {"x": 1, "y": 2}}
-slidingTangent:
-{"f": "x*x", "xmin": -5, "xmax": 5}
-area:
-{"f": "x*x"}
-- Updates must include FULL props for that object type.
-- Do NOT send partial props.
-- Example (point update):
-  {"type":"update","id":"pt1","props":{"x":2,"y":4}}
-  
-GraphObject types (FOLLOW EXACTLY):
-- function: { f, xmin?, xmax?, color?, lineWidth? }
-- point: { position:{x,y}, color?, size?, animateTo?:{x,y}, followFunction?:{f,startX,endX,duration?} }
-- label: { text, position:{x,y}, color?, fontSize? }
-- area: { f, g?, xmin, xmax, color?, opacity? }
-- slidingTangent: { f, startX, endX, xmin?, xmax?, duration?, color? }
-CRITICAL: Points use position:{x,y} NOT direct x,y!
-CORRECT point:
 {"type":"add","object":{"id":"pt1","type":"point","props":{"position":{"x":1,"y":1},"color":"red"}}}
+⚠️ CRITICAL: Use position:{x,y} wrapper, NOT direct x,y
 
-WHITEBOARD (LaTeX, 2-4 NEW lines):
+label:
+{"type":"add","object":{"id":"lbl1","type":"label","props":{"text":"Peak","position":{"x":0,"y":1}}}}
+
+slidingTangent:
+{"type":"add","object":{"id":"tan1","type":"slidingTangent","props":{"f":"x*x","startX":-2,"endX":2}}}
+
+area:
+{"type":"add","object":{"id":"area1","type":"area","props":{"f":"x*x","xmin":0,"xmax":2}}}
+
+WHITEBOARD (LaTeX):
 Current: ${JSON.stringify(whiteboardLines ?? [])}
-- Don't repeat existing lines
-- Show each algebra step
-- Example: "\\lim_{h \\to 0}" not "lim"
 
-GOOD EXAMPLE:
+Add 2-4 NEW lines showing work:
+- Don't repeat existing lines
+- Show each algebra transformation
+- Use proper LaTeX: \\lim_{h \\to 0}, \\frac{a}{b}, \\sin(x)
+
+EXAMPLES:
+
+✅ GOOD STEP (clear, focused):
 {
-  "subtitle": "Using the limit definition, we expand (x+h)² and see what cancels when h approaches zero",
+  "subtitle": "We'll use the limit definition of a derivative. This formula finds the slope by taking two points infinitely close together. As h gets smaller and smaller, we zoom in on the exact slope at one point. Let's work through the algebra step by step.",
   "actions": [
-    {"type":"add","object":{"id":"f1","type":"function","props":{"f":"x*x"}}}
+    {"type":"add","object":{"id":"f1","type":"function","props":{"f":"x*x","color":"blue"}}}
   ],
   "whiteboardLines": [
-    "f'(x) = \\lim_{h \\to 0} \\frac{(x+h)^2 - x^2}{h}",
-    "= \\lim_{h \\to 0} \\frac{x^2 + 2xh + h^2 - x^2}{h}",
-    "= \\lim_{h \\to 0} \\frac{h(2x + h)}{h}",
-    "= \\lim_{h \\to 0} (2x + h) = 2x"
+    "f'(x) = \\lim_{h \\to 0} \\frac{f(x+h) - f(x)}{h}",
+    "= \\lim_{h \\to 0} \\frac{(x+h)^2 - x^2}{h}",
+    "= \\lim_{h \\to 0} \\frac{2xh + h^2}{h}",
+    "= 2x"
   ]
 }
 
-BAD EXAMPLE:
+❌ BAD STEP (cluttered, unfocused):
 {
-  "subtitle": "The derivative is 2x",
+  "subtitle": "Here's the derivative",
   "actions": [
-    {"type":"add", "object":{"id":"f1", ...}},
-    {"type":"add", "object":{"id":"f2", ...}},
-    {"type":"add", "object":{"id":"area1", ...}},
-    {"type":"add", "object":{"id":"lbl1", ...}}
+    {"type":"add","object":{"id":"f1","type":"function","props":{"f":"x*x"}}},
+    {"type":"add","object":{"id":"f2","type":"function","props":{"f":"2*x"}}},
+    {"type":"add","object":{"id":"pt1","type":"point","props":{"position":{"x":1,"y":1}}}},
+    {"type":"add","object":{"id":"lbl1","type":"label","props":{"text":"Point","position":{"x":1,"y":1}}}},
+    {"type":"add","object":{"id":"area1","type":"area","props":{"f":"x*x","xmin":0,"xmax":1}}}
   ],
   "whiteboardLines": ["f'(x) = 2x"]
 }
 
 CRITICAL RULES:
 - Use 3.14159265359 NOT Math.PI
-- f/g as JS: "x*x", "Math.sin(x)", "x*x*x"
+- Function expressions: "x*x", "Math.sin(x)", "Math.cos(x)*x"
+- Max 3 objects per step (preferably 1-2)
 - IDs: f1, f2, tan1, pt1, area1, lbl1
-- If no visual needed: "actions": []
-- Max 2-3 objects, remove irrelevant ones first
+- Remove old objects before adding new concepts
 
-SUBTITLE RULES (CRITICAL):
-- Subtitles are what the user HEARS (via text-to-speech)
-- This is your ONLY chance to explain the concept verbally
-- Make subtitles 3-5 sentences, NOT 1 sentence
-- Explain WHAT we're doing, WHY it matters, and WHAT to notice
+OUTPUT FORMAT:
+Return ONLY raw JSON (no markdown, no backticks, no explanation):
+{
+  "subtitle": "...",
+  "actions": [...],
+  "whiteboardLines": [...]
+}
 
-GOOD SUBTITLE (derivative intro):
-"Let's start by understanding what a derivative actually means. Imagine you're driving a car - your position changes over time. The derivative tells us your speed at any exact moment. We're going to use the formal definition with limits, which might look scary, but I'll walk you through every step and show you why it makes sense."
-
-BAD SUBTITLE (same concept):
-"Let's explore the derivative definition."
-
-THE SUBTITLE IS THE TEACHING. Make it detailed.
-
-Current objects: ${JSON.stringify(objects ?? {})}
-Previous: ${previousStepsJson ?? "null"}
+Context:
+Previous step: ${previousStepsJson ?? "null"}
 Question: ${JSON.stringify(userQuestion)}
 `.trim();
 }
@@ -145,7 +136,7 @@ Return ONLY valid JSON in this shape:
 { "outline": string[] }
 
 Rules:
-- 4–10 steps
+- 4–15 steps
 - Each step is a short teaching goal (3–8 words)
 - No explanations
 - No extra keys
