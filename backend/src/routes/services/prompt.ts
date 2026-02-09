@@ -1,15 +1,30 @@
 import strict from "assert/strict";
 import { Action } from "./schema";
+import { Plan } from "./planSchema";
 
 export function buildPrompt(
   userQuestion: string,
   stepNumber: number,
   outline: string[],
+  plan: Plan,
   previousStepsJson?: string,
   objects?: Record<string, NonNullable<Action["object"]>>,
   whiteboardLines?: string[]
 ) {
   return `
+YOUR PLAN FOR THIS STEP:
+${plan.teachingGoal}
+
+YOU MUST CREATE THESE VISUALS:
+${plan.keyVisuals.map((v, i) => `${i + 1}. ${v.description} (${v.type})`).join('\n')}
+
+YOUR EXPLANATION (use exactly this):
+${plan.explanation}
+
+CRITICAL: The actions you create MUST match the keyVisuals list above.
+Every visual listed must appear in your actions array.
+
+
 You are generating step ${stepNumber + 1} of ${outline.length}.
 GOAL: "${outline[stepNumber]}"
 
@@ -29,7 +44,21 @@ This is what the user HEARS via voice.
 Example: "Let's see what a derivative really means. Imagine driving a car - your speedometer shows how fast you're going at each moment. That's exactly what a derivative does for any function: it tells us the rate of change at each point. We'll use the limit definition to find this mathematically."
 
 GRAPH OBJECTS - USE SPARINGLY:
-Current objects: ${JSON.stringify(objects ?? {})}
+Current objects on graph: ${JSON.stringify(objects ?? {})}
+
+🔴 MANDATORY CLEANUP RULE:
+Your actions array MUST start by removing ALL existing objects shown above.
+Then add ONLY the new objects from your plan.
+
+Example when objects exist:
+"actions": [
+  {"type":"remove","id":"f1"},
+  {"type":"remove","id":"pt1"},
+  {"type":"add","object":{"id":"fnew","type":"function","props":{...}}}
+]
+
+⚠️ NEVER reuse the same object ID without removing it first.
+⚠️ Each object ID must be unique on the graph at any time.
 
 WHEN TO ADD OBJECTS:
 ✅ function: When introducing a NEW function to visualize
@@ -43,14 +72,7 @@ WHEN TO ADD OBJECTS:
 - Multiple functions unless comparing them
 - Points that aren't referenced in explanation
 - Labels that repeat whiteboard content
-- More than 6 objects per step
-
-OBJECT ID RULES:
-- Each ID must be unique at any given time
-- Before adding an object with existing ID, REMOVE it first:
-  WRONG: [{"type":"add","object":{"id":"f1",...}}]
-  RIGHT: [{"type":"remove","id":"f1"},{"type":"add","object":{"id":"f1",...}}]
-- Or use different IDs: f1, f2, f3, etc.
+- More than 3-4 objects per step
 
 OBJECT FORMATS (EXACT SYNTAX):
 
@@ -158,5 +180,48 @@ Examples of INVALID questions (respond with error message):
 
 Question:
 ${JSON.stringify(userQuestion)}
+`.trim();
+}
+
+
+
+export function buildPlanningPrompt(
+  userQuestion: string,
+  stepNumber: number,
+  outline: string[],
+  previousStepsJson?: string,
+  objects?: Record<string, any>,
+  whiteboardLines?: string[]
+) {
+  return `
+You are planning step ${stepNumber + 1} of ${outline.length} for a math lesson.
+Goal: "${outline[stepNumber]}"
+
+Plan what to teach:
+1. What concept? (one sentence)
+2. What visuals? (be specific but brief)
+3. How to explain? (3-5 sentences)
+4. What math to show?
+
+Current graph: ${JSON.stringify(objects ?? {})}
+Current whiteboard: ${JSON.stringify(whiteboardLines ?? [])}
+
+CRITICAL: Return VALID JSON ONLY (no markdown, no backticks, no extra text).
+
+Example valid response:
+{
+  "teachingGoal": "Show how derivative measures instantaneous rate of change",
+  "keyVisuals": [
+    {"type": "function", "description": "graph of x squared", "function": "x*x"},
+    {"type": "slidingTangent", "description": "tangent line sliding along curve", "function": "x*x", "startX": -2, "endX": 2}
+  ],
+  "explanation": "Let us use the limit definition to find the derivative. This measures how fast the function changes at each point. We will work through the algebra step by step.",
+  "whiteboardWork": ["f'(x) = \\\\lim_{h \\\\to 0} \\\\frac{f(x+h)-f(x)}{h}", "= 2x"]
+}
+
+Valid types ONLY: function, point, label, area, slidingTangent
+
+Question: ${JSON.stringify(userQuestion)}
+Previous: ${previousStepsJson ?? "null"}
 `.trim();
 }
