@@ -13,6 +13,14 @@ to generate the next step and then it broadcasts it, a fancy way of saying it fu
 then theres lots of error handling, when its done delete session delete subscriber
 just understand all ts make sure it makes sense cuz its rough rn
 
+WHAT I DID:
+- planschema basically i found that long ass prompt the ai cant generate a explanation with visuals its way too much to ask
+so basically i made a plan schema and planprompt so in the generate step function it creates an entire plan for the step
+and then makes the actual explanation + visuals json to send back to frontend so the ai doesnt have to think so much for
+each step it can break it down into multiple calls to make it easier 
+- i also made schemas for each prop it works ok sometimes its a little weird but thats so the frontend doesnt receive
+absolute aids when trying to render props on the screen
+- few bug fixes here and there
 
 
 
@@ -29,3 +37,6 @@ it feels like its spewing random ass garbage at u
 - functions probably need constraints because ai cant properly draw triangles or anything to explain stuff (also the ai explanation dont match)
     - experimented with sm models and diff promps but big issue like the ai will say like lets visualize a triangle but then plot a sin function or something that doesnt help in that step
     - ai also doesnt use the camera function at all always the same static camera
+
+need to have animations not just all start at the beginning. try to have timing maybe between text/narration/animations?
+we dont have that wow factor like rn technically its doing what we say but the visuals dont actually help teach when u look at it
