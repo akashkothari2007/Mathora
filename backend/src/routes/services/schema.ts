@@ -13,18 +13,6 @@ const CleanedString = z.preprocess(
   z.string()
 );
 
-// Coerce string numbers to actual numbers (AI sometimes outputs "1" instead of 1)
-const CoercedNumber = z.preprocess(
-  (val) => {
-    if (typeof val === "string") {
-      const num = parseFloat(val);
-      if (!isNaN(num)) return num;
-    }
-    return val;
-  },
-  z.number()
-);
-
 const FunctionExprSchema = z.string().refine(expr => {
   try {
     new Function("x", `return (${expr})`)
