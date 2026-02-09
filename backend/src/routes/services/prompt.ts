@@ -46,19 +46,22 @@ Example: "Let's see what a derivative really means. Imagine driving a car - your
 GRAPH OBJECTS - USE SPARINGLY:
 Current objects on graph: ${JSON.stringify(objects ?? {})}
 
-🔴 MANDATORY CLEANUP RULE:
-Your actions array MUST start by removing ALL existing objects shown above.
-Then add ONLY the new objects from your plan.
+🔴🔴🔴 MANDATORY FIRST STEP - REMOVE ALL EXISTING OBJECTS:
+Before adding ANY new objects, your actions array MUST start with remove actions for EVERY existing object ID shown above.
 
-Example when objects exist:
+STEP 1: Remove all existing objects
+STEP 2: Add ONLY 2-3 new objects from your plan
+
+Example when objects = {"f1": {...}, "pt1": {...}}:
 "actions": [
   {"type":"remove","id":"f1"},
   {"type":"remove","id":"pt1"},
-  {"type":"add","object":{"id":"fnew","type":"function","props":{...}}}
+  {"type":"add","object":{"id":"f2","type":"function","props":{"f":"x*x"}}},
+  {"type":"add","object":{"id":"pt2","type":"point","props":{"position":{"x":2,"y":4}}}}
 ]
 
-⚠️ NEVER reuse the same object ID without removing it first.
-⚠️ Each object ID must be unique on the graph at any time.
+⚠️ FIRST action MUST be remove if any objects exist above.
+⚠️ Use NEW IDs for new objects (f2, pt2, etc), NOT same IDs.
 
 WHEN TO ADD OBJECTS:
 ✅ function: When introducing a NEW function to visualize
@@ -72,19 +75,21 @@ WHEN TO ADD OBJECTS:
 - Multiple functions unless comparing them
 - Points that aren't referenced in explanation
 - Labels that repeat whiteboard content
-- More than 3-4 objects per step
+- More than 2-3 NEW objects per step (not counting remove actions)
 
-OBJECT FORMATS (EXACT SYNTAX):
+OBJECT FORMATS (EXACT SYNTAX - ALL NUMBERS MUST BE BARE, NOT QUOTED):
 
 function:
 {"type":"add","object":{"id":"f1","type":"function","props":{"f":"x*x","color":"blue"}}}
 
 point:
 {"type":"add","object":{"id":"pt1","type":"point","props":{"position":{"x":1,"y":1},"color":"red"}}}
-⚠️ CRITICAL: Use position:{x,y} wrapper, NOT direct x,y
+⚠️ CRITICAL: x and y must be NUMBERS not strings: {"x":1,"y":1} NOT {"x":"1","y":"1"}
+⚠️ Use position:{x,y} wrapper, NOT direct x,y
 
 label:
 {"type":"add","object":{"id":"lbl1","type":"label","props":{"text":"Peak","position":{"x":0,"y":1}}}}
+⚠️ CRITICAL: x and y must be NUMBERS not strings
 
 slidingTangent:
 {"type":"add","object":{"id":"tan1","type":"slidingTangent","props":{"f":"x*x","startX":-2,"endX":2}}}
@@ -129,11 +134,21 @@ EXAMPLES:
   "whiteboardLines": ["f'(x) = 2x"]
 }
 
+❌ BAD STEP (quoted numbers - WILL CAUSE ERRORS):
+{
+  "subtitle": "Let's plot a point",
+  "actions": [
+    {"type":"add","object":{"id":"pt1","type":"point","props":{"position":{"x":"1","y":"1"}}}}
+  ],
+  "whiteboardLines": []
+}
+
 CRITICAL RULES:
+- All numbers must be bare: {"x":1} NOT {"x":"1"}
 - Use 3.14159265359 NOT Math.PI
 - Function expressions: "x*x", "Math.sin(x)", "Math.cos(x)*x"
-- Max 3 objects per step (preferably 1-2)
-- IDs: f1, f2, tan1, pt1, area1, lbl1
+- Max 2-3 NEW objects per step (1-2 is best)
+- UNQIIDs: f1, f2, tan1, pt1, area1, lbl1
 - Remove old objects before adding new concepts
 
 OUTPUT FORMAT:

@@ -1,4 +1,5 @@
-import { z } from "zod";
+import { size, z } from "zod";
+import { duration } from "zod/v4/classic/iso.cjs";
 
 const CleanedString = z.preprocess(
   (val) => {
@@ -10,6 +11,18 @@ const CleanedString = z.preprocess(
     return val;
   },
   z.string()
+);
+
+// Coerce string numbers to actual numbers (AI sometimes outputs "1" instead of 1)
+const CoercedNumber = z.preprocess(
+  (val) => {
+    if (typeof val === "string") {
+      const num = parseFloat(val);
+      if (!isNaN(num)) return num;
+    }
+    return val;
+  },
+  z.number()
 );
 
 const FunctionExprSchema = z.string().refine(expr => {
@@ -35,6 +48,7 @@ const PointPropsSchema = z.object({
     y: z.number(),
   }).strict(),
   color: z.string().optional(),
+  size: z.number().optional(),
   animateTo: z.object({
     x: z.number(),
     y: z.number(),
@@ -43,9 +57,9 @@ const PointPropsSchema = z.object({
     f: FunctionExprSchema,
     startX: z.number(),
     endX: z.number(),
+    duration: z.number().optional(),
   }).optional(),
 }).strict();
-
 
 const FunctionPropsSchema = z.object({
   f: FunctionExprSchema,
@@ -53,6 +67,7 @@ const FunctionPropsSchema = z.object({
   xmax: z.number().optional(),
   steps: z.number().optional(),
   color: z.string().optional(),
+  lineWidth: z.number().optional(),
 }).strict();
 
 
@@ -61,11 +76,11 @@ const SlidingTangentPropsSchema = z.object({
   startX: z.number(),
   endX: z.number(),
   duration: z.number().optional(),
-  color: z.string().optional(),
   xmin: z.number().optional(),
   xmax: z.number().optional(),
+  color: z.string().optional(),
+  lineWidth: z.number().optional(),
 }).strict();
-
 
 const AreaPropsSchema = z.object({
   f: FunctionExprSchema,
@@ -75,6 +90,13 @@ const AreaPropsSchema = z.object({
   steps: z.number().optional(),
   color: z.string().optional(),
   opacity: z.number().optional(),
+  animateTo: z.object({
+    f: FunctionExprSchema.optional(),
+    g: FunctionExprSchema.optional(),
+    xmin: z.number().optional(),
+    xmax: z.number().optional(),
+  }).optional(),
+  animateDuration: z.number().optional(),
 }).strict();
 
 const LabelPropsSchema = z.object({
@@ -86,7 +108,6 @@ const LabelPropsSchema = z.object({
   color: z.string().optional(),
   fontSize: z.number().optional(),
 }).strict();
-
 
 export const ObjectSchema = z.discriminatedUnion("type", [
   z.object({
