@@ -43,4 +43,22 @@ we dont have that wow factor like rn technically its doing what we say but the v
 
 HOLA HERES QUICK SUMMARY:
 1. fuck the audio for now thats an easy fix ill fix it Later
-2. fuck the timing for now (templates will fix that)
+2. templates we add later\
+3. diff scene types ill add later, like 2d graph and axes, empty, unit circle etc. (in plan)
+
+DO THIS STUFF BEFORE MAKING A BRANCH AND MESSING AROUND WITH Frontend
+1. add line + secant line two new primitives (like function, shade area etc.) to prompt and schema
+2. make the prompt nicer so much tokens ask gpt how u can optimize maybe remove some uncenssary fields and other random shit
+3. and maybe go back to single call per step
+
+FRONTEND SO FAR
+ im brainstorming random stuff i could do
+ one thing is FOR CAMERA:
+ - ai cannot control a camera its so bad and it just doesnt do it
+ - oculd do it mathematically i could see where the function is or intersection points and autocompute where camera should go
+ - im gonna experiment with it
+ FOR TIMING:
+ - im still thinking brah
+ - maybe based on the words or nah
+ - or like default time between actions so not all at once at least 
+ 
