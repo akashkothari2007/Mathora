@@ -1,29 +1,15 @@
 import strict from "assert/strict";
 import { Action } from "./schema";
-import { Plan } from "./planSchema";
 
 export function buildPrompt(
   userQuestion: string,
   stepNumber: number,
   outline: string[],
-  plan: Plan,
   previousStepsJson?: string,
   objects?: Record<string, NonNullable<Action["object"]>>,
   whiteboardLines?: string[]
 ) {
   return `
-YOUR PLAN FOR THIS STEP:
-${plan.teachingGoal}
-
-YOU MUST CREATE THESE VISUALS:
-${plan.keyVisuals.map((v, i) => `${i + 1}. ${v.description} (${v.type})`).join('\n')}
-
-YOUR EXPLANATION (use exactly this):
-${plan.explanation}
-
-CRITICAL: The actions you create MUST match the keyVisuals list above.
-Every visual listed must appear in your actions array.
-
 
 You are generating step ${stepNumber + 1} of ${outline.length}.
 GOAL: "${outline[stepNumber]}"
@@ -198,45 +184,3 @@ ${JSON.stringify(userQuestion)}
 `.trim();
 }
 
-
-
-export function buildPlanningPrompt(
-  userQuestion: string,
-  stepNumber: number,
-  outline: string[],
-  previousStepsJson?: string,
-  objects?: Record<string, any>,
-  whiteboardLines?: string[]
-) {
-  return `
-You are planning step ${stepNumber + 1} of ${outline.length} for a math lesson.
-Goal: "${outline[stepNumber]}"
-
-Plan what to teach:
-1. What concept? (one sentence)
-2. What visuals? (be specific but brief)
-3. How to explain? (3-5 sentences)
-4. What math to show?
-
-Current graph: ${JSON.stringify(objects ?? {})}
-Current whiteboard: ${JSON.stringify(whiteboardLines ?? [])}
-
-CRITICAL: Return VALID JSON ONLY (no markdown, no backticks, no extra text).
-
-Example valid response:
-{
-  "teachingGoal": "Show how derivative measures instantaneous rate of change",
-  "keyVisuals": [
-    {"type": "function", "description": "graph of x squared", "function": "x*x"},
-    {"type": "slidingTangent", "description": "tangent line sliding along curve", "function": "x*x", "startX": -2, "endX": 2}
-  ],
-  "explanation": "Let us use the limit definition to find the derivative. This measures how fast the function changes at each point. We will work through the algebra step by step.",
-  "whiteboardWork": ["f'(x) = \\\\lim_{h \\\\to 0} \\\\frac{f(x+h)-f(x)}{h}", "= 2x"]
-}
-
-Valid types ONLY: function, point, label, area, slidingTangent
-
-Question: ${JSON.stringify(userQuestion)}
-Previous: ${previousStepsJson ?? "null"}
-`.trim();
-}

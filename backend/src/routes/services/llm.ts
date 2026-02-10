@@ -1,11 +1,10 @@
 import { Action, Step, TimelineSchema } from "./schema";
-import { buildPlanningPrompt, buildPrompt } from "./prompt";
+import {buildPrompt } from "./prompt";
 import { buildOutlinePrompt } from "./prompt";
 import dotenv from "dotenv";
 import {jsonrepair} from 'jsonrepair';
 import { string } from "zod/v4/core/regexes";
 import {StepSchema} from "./schema";
-import {PlanSchema} from "./planSchema";
 dotenv.config();
 
 const API_KEY = process.env.DEEPSEEK_API_KEY;
@@ -47,17 +46,12 @@ export async function generateOutline(question: string): Promise<string[]> {
   return parsed.outline;
 }
 
-export async function generateStep(question: string, step_number:number, outline: string[], previousStepJson?: any, objects?: Record<string, NonNullable<Action["object"]>>, whiteboardLines?: string[]){
+export async function generateStep(question: string, step_number:number, outline: string[], previousStepJson?: string, objects?: Record<string, NonNullable<Action["object"]>>, whiteboardLines?: string[]){
   let max_attempts = 3;
   
   for (let attempt = 1; attempt <= max_attempts; attempt++) {
     try {
-      const planprompt = buildPlanningPrompt(question, step_number, outline, previousStepJson ? JSON.stringify(previousStepJson) : undefined, objects, whiteboardLines);
-      const planraw = await callAzureOpenAI(planprompt);
-      const plancleaned = planraw.trim().replace(/^```json\s*/i, "").replace(/^```\s*/i, "").replace(/\s*```$/, "");
-      const plan = PlanSchema.parse(JSON.parse(plancleaned));
-
-      const prompt = buildPrompt(question, step_number, outline, plan, previousStepJson, objects, whiteboardLines);
+      const prompt = buildPrompt(question, step_number, outline, previousStepJson, objects, whiteboardLines);
       const raw = await callAzureOpenAI(prompt);
       const cleaned = raw.trim().replace(/^```json\s*/i, "").replace(/^```\s*/i, "").replace(/\s*```$/, "");
       const parsed = StepSchema.parse(JSON.parse(cleaned));

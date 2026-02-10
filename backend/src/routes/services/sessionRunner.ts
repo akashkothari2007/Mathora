@@ -49,8 +49,9 @@ export async function startSessionRunner(sessionId: string) {
           s.prompt,
           stepIndex,
           s.outline,
-          s.prevStep,
-          s.objects
+          s.prevStep ? JSON.stringify(s.prevStep) : undefined,
+          s.objects,
+          s.whiteboardLines
         );
   
         broadcastStep(sessionId, step);

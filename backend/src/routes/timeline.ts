@@ -46,7 +46,7 @@ router.post("/start", async (req, res) => {
     }
     
 
-    const firstStep = await generateStep(prompt, 0, outline, null);
+    const firstStep = await generateStep(prompt, 0, outline, undefined);
     const t1 = Date.now();
     console.log(`[Backend] [${requestId}] First step generated in ${t1 - t0}ms`);
 
