@@ -41,6 +41,7 @@ it feels like its spewing random ass garbage at u
 need to have animations not just all start at the beginning. try to have timing maybe between text/narration/animations?
 we dont have that wow factor like rn technically its doing what we say but the visuals dont actually help teach when u look at it
 
+SAFIULLAH INSHALLAH
 HOLA HERES QUICK SUMMARY:
 1. fuck the audio for now thats an easy fix ill fix it Later
 2. templates we add later\
@@ -52,6 +53,10 @@ DO THIS STUFF BEFORE MAKING A BRANCH AND MESSING AROUND WITH Frontend
 3. and maybe go back to single call per step
 4. just go back to old backend mostly theres sm garbage it outputs, keep schema stuff and wtv else u added just fix
 the prompt and like the two calls per step keep ai job to a minimum
+like for example removing before adding i sent u a vid on why thats not great lmao its so funny
+5. like idk why the subttiles it generates r so repetitive and ass before it seemed fine i think the method before was lowkey better
+thanks my fella
+
 
 FRONTEND SO FAR
  im brainstorming random stuff i could do
