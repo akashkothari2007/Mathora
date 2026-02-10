@@ -68,4 +68,10 @@ FRONTEND SO FAR
  - im still thinking brah
  - maybe based on the words or nah
  - or like default time between actions so not all at once at least 
- 
+ - one idea i had was chunking subttile so instead of it returning one subtitle per step, it splits it across the actions
+ so like
+ one step:
+ [draw function, "Let's take a look at this graph of x^2 - 4"]
+ [add point, ""] (SO IF NO SUBTITLE IT RUNS INSTANTLY SO IT SORT OF GROUPS THE TWO POINTS)
+ [add point, "and it's roots]
+ [add label, "x = 2 and x = -2"]
