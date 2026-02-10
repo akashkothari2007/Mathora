@@ -24,6 +24,7 @@ const FunctionExprSchema = z.string().refine(expr => {
   message: "Invalid function expression string"
 });
 
+
 const CameraTargetSchema = z.object({
   center: z.tuple([z.number(), z.number(), z.number()]).optional(),
   width: z.number().optional(),
@@ -97,7 +98,7 @@ const LabelPropsSchema = z.object({
   fontSize: z.number().optional(),
 }).strict();
 
-const SecantLinePropsSchema = z.object({
+const SecantLineSchema = z.object({
   f: FunctionExprSchema,
   startX: z.number(),
   endX: z.number(),
@@ -106,6 +107,20 @@ const SecantLinePropsSchema = z.object({
   lineWidth: z.number().optional(),
   pointSize: z.number().optional(),
 }).strict();
+
+const Line2DSchema = z.object({
+  start: z.object({
+    x: z.number(),
+    y: z.number(),
+  }).strict(),
+  end: z.object({
+    x: z.number(),
+    y: z.number(),
+  }).strict(),
+  color: z.string().optional(),
+  lineWidth: z.number().optional(),
+}).strict();
+
 
 export const ObjectSchema = z.discriminatedUnion("type", [
   z.object({
@@ -135,8 +150,13 @@ export const ObjectSchema = z.discriminatedUnion("type", [
   }),
   z.object({
     id: CleanedString,
-    type: z.literal("secantLine"),
-    props: SecantLinePropsSchema,
+    type: z.literal("SecantLine"),
+    props: SecantLineSchema,
+  }),
+  z.object({
+    id: CleanedString,
+    type: z.literal("Line2D"),
+    props: Line2DSchema,
   }),
 ]);
 
@@ -179,4 +199,4 @@ export const StepSchema = z.object({
 
 export const TimelineSchema = z.array(StepSchema);
 export type Action = z.infer<typeof ActionSchema>
-export type Step = z.infer<typeof StepSchema>
+export type Step = z.infer<typeof StepSchema> 
