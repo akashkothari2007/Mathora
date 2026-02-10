@@ -50,6 +50,8 @@ DO THIS STUFF BEFORE MAKING A BRANCH AND MESSING AROUND WITH Frontend
 1. add line + secant line two new primitives (like function, shade area etc.) to prompt and schema
 2. make the prompt nicer so much tokens ask gpt how u can optimize maybe remove some uncenssary fields and other random shit
 3. and maybe go back to single call per step
+4. just go back to old backend mostly theres sm garbage it outputs, keep schema stuff and wtv else u added just fix
+the prompt and like the two calls per step keep ai job to a minimum
 
 FRONTEND SO FAR
  im brainstorming random stuff i could do
