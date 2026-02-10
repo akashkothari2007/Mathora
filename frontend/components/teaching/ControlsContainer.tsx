@@ -5,19 +5,18 @@ type Props = {
     setStepIndex: React.Dispatch<React.SetStateAction<number>>
     reset: () => void
     stepIndex: number
-    availableSteps: number
-    totalSteps: number
+    stepsLength: number
+    done?: boolean
 }
 
-export default function ControlsContainer({setStepIndex, reset, stepIndex, availableSteps, totalSteps}: Props) {
+export default function ControlsContainer({ setStepIndex, reset, stepIndex, stepsLength, done = true }: Props) {
     const [showInfo, setShowInfo] = useState(false)
 
-    const canGoNext = stepIndex < availableSteps - 1
+    const canGoNext = stepIndex < stepsLength - 1
     const canGoPrev = stepIndex > 0
-    const isStreaming = availableSteps < totalSteps
+    const isStreaming = !done
 
-    const currentPercent = totalSteps > 0 ? ((stepIndex + 1) / totalSteps) * 100 : 0
-    const availablePercent = totalSteps > 0 ? (availableSteps / totalSteps) * 100 : 0
+    const currentPercent = stepsLength > 0 ? ((stepIndex + 1) / stepsLength) * 100 : 0
 
     // Shared disabled style
     const disabledClass = "opacity-40 cursor-not-allowed pointer-events-none"
@@ -33,7 +32,7 @@ export default function ControlsContainer({setStepIndex, reset, stepIndex, avail
                         <span className="text-white/90 text-xs sm:text-sm font-medium tabular-nums">
                             {stepIndex + 1}
                             <span className="text-white/30 mx-1">/</span>
-                            {totalSteps}
+                            {stepsLength}
                         </span>
                     </div>
                     
@@ -44,7 +43,7 @@ export default function ControlsContainer({setStepIndex, reset, stepIndex, avail
                                 <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
                             </span>
                             <span className="text-emerald-400/80 text-[10px] sm:text-xs font-medium">
-                                {availableSteps} loaded
+                                Loading steps...
                             </span>
                         </div>
                     )}
@@ -55,21 +54,13 @@ export default function ControlsContainer({setStepIndex, reset, stepIndex, avail
                     <div 
                         className="relative h-1.5 sm:h-2 rounded-full bg-white/[0.08] cursor-pointer group"
                         onClick={(e) => {
-                            async () => {
+                            if (stepsLength <= 0) return
                             const rect = e.currentTarget.getBoundingClientRect()
                             const percent = (e.clientX - rect.left) / rect.width
-                            const newStep = Math.round(percent * (totalSteps - 1))
-                            if (newStep < availableSteps) {
-                                await unlockAudio();
-                                setStepIndex(newStep)
-                            }
-                        }}}
+                            const newStep = Math.min(Math.round(percent * (stepsLength - 1)), stepsLength - 1)
+                            setStepIndex(newStep)
+                        }}
                     >
-                        {/* Buffered (available) */}
-                        <div 
-                            className="absolute inset-y-0 left-0 bg-white/10 rounded-full transition-all duration-500"
-                            style={{ width: `${availablePercent}%` }}
-                        />
                         
                         {/* Current progress */}
                         <div 
@@ -89,7 +80,12 @@ export default function ControlsContainer({setStepIndex, reset, stepIndex, avail
                 <div className="flex items-center gap-1.5 px-2 pb-2 sm:px-3 sm:pb-3 sm:gap-2">
                     {/* Prev */}
                     <button
-                        onClick={() => canGoPrev && setStepIndex((s) => s - 1)}
+                        onClick={() => {
+                            if (canGoPrev) {
+                                unlockAudio()
+                                setStepIndex((s) => s - 1)
+                            }
+                        }}
                         disabled={!canGoPrev}
                         className={`flex-1 flex items-center justify-center gap-1 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-medium transition-all
                             ${canGoPrev 
@@ -104,7 +100,12 @@ export default function ControlsContainer({setStepIndex, reset, stepIndex, avail
 
                     {/* Next */}
                     <button
-                        onClick={() => canGoNext && setStepIndex((s) => s + 1)}
+                        onClick={() => {
+                            if (canGoNext) {
+                                unlockAudio()
+                                setStepIndex((s) => s + 1)
+                            }
+                        }}
                         disabled={!canGoNext}
                         className={`flex-[2] flex items-center justify-center gap-1.5 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all
                             ${canGoNext 

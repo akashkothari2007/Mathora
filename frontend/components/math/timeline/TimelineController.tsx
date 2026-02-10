@@ -9,6 +9,7 @@ import { handleSubtitle } from './handleSubtitle'
 type UseTimelineControllerProps = {
   steps: Step[]
   stepIndex: number
+  setStepIndex: React.Dispatch<React.SetStateAction<number>>
   setGraphObjects: React.Dispatch<React.SetStateAction<GraphObject[]>>
   setSubtitle: React.Dispatch<React.SetStateAction<string>>
   setCameraTarget: React.Dispatch<React.SetStateAction<CameraTarget | null>>
@@ -22,11 +23,32 @@ export function useTimelineController({
   setSubtitle,
   setCameraTarget,
   stepIndex,
+  setStepIndex,
   executed,
   setWhiteboardLines,
 }: UseTimelineControllerProps) {
   
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const advanceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Auto-advance after timeToAdvance ms when there is a next step
+  useEffect(() => {
+    const step = steps[stepIndex];
+    const ms = step?.timeToAdvance;
+    const hasNext = stepIndex + 1 < steps.length;
+    if (ms == null || !hasNext) return;
+
+    advanceTimerRef.current = setTimeout(() => {
+      setStepIndex((prev) => prev + 1);
+    }, ms);
+    return () => {
+      if (advanceTimerRef.current) {
+        clearTimeout(advanceTimerRef.current);
+        advanceTimerRef.current = null;
+      }
+    };
+  }, [stepIndex, steps, setStepIndex]);
+
   // execute the current step exactly once
   useEffect(() => {
 

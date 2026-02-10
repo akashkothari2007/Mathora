@@ -33,6 +33,7 @@ export const functionPlotTimeline: Step[] = [
     whiteboardLines: [
       String.raw`y = x`,
     ],
+    timeToAdvance: 2000,
   },
 
  
@@ -77,6 +78,7 @@ export const functionPlotTimeline: Step[] = [
         }
       }
     ],
+    timeToAdvance: 2000,
   },
 
   {

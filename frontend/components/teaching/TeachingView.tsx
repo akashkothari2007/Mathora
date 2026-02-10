@@ -17,10 +17,10 @@ export default function TeachingView({ prompt, onNewChat }: Props) {
 
   const testSteps = resolveTestTimeline(prompt);
   const isTest = testSteps !== null;
-  const { steps, totalSteps} = useTimelineStream(isTest ? "" : prompt, onNewChat);
+  const { steps, done } = useTimelineStream(isTest ? "" : prompt, onNewChat);
 
   const displayedSteps = testSteps ?? steps;
-  const displayedTotalSteps = testSteps?.length ?? totalSteps;
+  const displayedDone = isTest ? true : done;
   return (
     <div className="h-full flex flex-col">
       <TopBar
@@ -53,7 +53,7 @@ export default function TeachingView({ prompt, onNewChat }: Props) {
             showExplanation={showExplanation}
             setSubtitle={setSubtitle}
             steps={displayedSteps}
-            totalSteps={displayedTotalSteps}
+            done={displayedDone}
           />
         ) : (
           <div className="flex-1 flex items-center justify-center bg-neutral-950">

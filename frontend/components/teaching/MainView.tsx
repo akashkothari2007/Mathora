@@ -14,8 +14,7 @@ type Props = {
     showExplanation: boolean
     setSubtitle: React.Dispatch<React.SetStateAction<string>>
     steps: Step[]
-    totalSteps: number
-
+    done?: boolean
 }
 export default function MainView({
     showGraph,
@@ -23,7 +22,8 @@ export default function MainView({
     showExplanation,
     setSubtitle,
     steps,
-    totalSteps}: Props) {
+    done = true,
+}: Props) {
 
         //all animations states etc
 
@@ -49,7 +49,7 @@ export default function MainView({
 
         
         // use timeline controller to handle the timeline
-        useTimelineController({steps: steps, setGraphObjects, setSubtitle, setCameraTarget, stepIndex, executed, setWhiteboardLines})    //use timeline controller to handle the timeline
+        useTimelineController({steps, setGraphObjects, setSubtitle, setCameraTarget, stepIndex, setStepIndex, executed, setWhiteboardLines})
 
         const panels = [
         showGraph && <GraphPanel key = "graph" graphObjects={graphObjects} cameraTarget={cameraTarget} />,
@@ -66,7 +66,7 @@ export default function MainView({
                     {panel}
                 </div>
             ))}
-            <ControlsContainer setStepIndex={setStepIndex} reset={reset} stepIndex={stepIndex} availableSteps={steps?.length ?? 0} totalSteps={totalSteps} />
+            <ControlsContainer setStepIndex={setStepIndex} reset={reset} stepIndex={stepIndex} stepsLength={steps?.length ?? 0} done={done} />
         </div>
     )
     

@@ -2,17 +2,16 @@ import { useEffect, useRef, useState } from "react";
 import { normalizeSteps } from "../math/timeline/NormalizeTimeline";
 import type { Step } from "../math/types/steps";
 
-type StartResponse = { sessionId: string; firstStep: any[]; totalSteps: number; error?: string };
+type StartResponse = { sessionId: string; firstStep: any[]; totalSteps?: number; error?: string };
 
 export function useTimelineStream(prompt: string, onNewChat: () => void) {
   const [steps, setSteps] = useState<Step[] | null>(null);
-  const [totalSteps, setTotalSteps] = useState<number>(0);
+  const [done, setDone] = useState(false);
 
-  // Only need refs for things that persist across the async flow
   const eventSourceRef = useRef<EventSource | null>(null);
   const rawStepsRef = useRef<any[]>([]);
 
-  if (!prompt) return { steps: null, totalSteps: 0 };
+  if (!prompt) return { steps: null, done: false };
 
   useEffect(() => {
     // Fresh AbortController for THIS effect instance
@@ -23,7 +22,7 @@ export function useTimelineStream(prompt: string, onNewChat: () => void) {
     eventSourceRef.current = null;
     rawStepsRef.current = [];
     setSteps(null);
-    setTotalSteps(0);
+    setDone(false);
     async function run() {
       try {
         // Pass signal to fetch - if controller.abort() is called, fetch throws AbortError
@@ -47,11 +46,8 @@ export function useTimelineStream(prompt: string, onNewChat: () => void) {
         // If aborted between fetch completing and here, bail out
         if (controller.signal.aborted) return;
 
-        console.log("data", data);
-
         rawStepsRef.current = data.firstStep;
         setSteps(normalizeSteps(rawStepsRef.current));
-        setTotalSteps(data.totalSteps);
 
         const es = new EventSource(
           `http://localhost:3001/timeline/stream/${data.sessionId}`
@@ -65,6 +61,7 @@ export function useTimelineStream(prompt: string, onNewChat: () => void) {
         });
 
         es.addEventListener("done", () => {
+          setDone(true);
           es.close();
           if (eventSourceRef.current === es) eventSourceRef.current = null;
         });
@@ -99,5 +96,5 @@ export function useTimelineStream(prompt: string, onNewChat: () => void) {
     };
   }, [prompt, onNewChat]);
 
-  return { steps, totalSteps };
+  return { steps, done };
 }

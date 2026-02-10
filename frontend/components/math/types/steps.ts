@@ -6,4 +6,5 @@ export type Step = {
     actions?: Action[]
     cameraTarget?: CameraTarget | null
     whiteboardLines?: string[]
+    timeToAdvance?: number
 }
