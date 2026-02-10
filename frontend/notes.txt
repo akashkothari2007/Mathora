@@ -1,0 +1,6 @@
+stuff i needa add
+1. add lines to backend schema DONE
+2. FIX THE GODDAMN TIMING SOMEHOW
+3. MAYBE ADD A FIELD IN THE PLANNER OF WHAT TYPE OF GRID, (2d graph, unit circle, no axes)
+4. create templates (triangle?)
+5. wire templates frontend+backend (ids!!!)
