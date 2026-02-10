@@ -97,6 +97,15 @@ const LabelPropsSchema = z.object({
   fontSize: z.number().optional(),
 }).strict();
 
+const SecantLinePropsSchema = z.object({
+  f: FunctionExprSchema,
+  startX: z.number(),
+  endX: z.number(),
+  color: z.string().optional(),
+  lineWidth: z.number().optional(),
+  pointSize: z.number().optional(),
+}).strict();
+
 export const ObjectSchema = z.discriminatedUnion("type", [
   z.object({
     id: CleanedString,
@@ -122,6 +131,11 @@ export const ObjectSchema = z.discriminatedUnion("type", [
     id: CleanedString,
     type: z.literal("area"),
     props: AreaPropsSchema,
+  }),
+  z.object({
+    id: CleanedString,
+    type: z.literal("secantLine"),
+    props: SecantLinePropsSchema,
   }),
 ]);
 

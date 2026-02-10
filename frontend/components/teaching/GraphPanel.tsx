@@ -13,6 +13,7 @@ import Label2D from "../math/graphFunctions/Label2D";
 import ShadeArea from "../math/graphFunctions/ShadeArea";
 import Line2D from "../math/graphFunctions/Line2D";
 import SlidingTangent from "../math/graphFunctions/slidingTangent";
+import SecantLine from "../math/graphFunctions/SecantLine";
 import { GraphObject } from "../math/types/graphObject";
 import { Step } from "../math/types/steps";
 import { CameraTarget } from "../math/types/cameraTarget";
@@ -50,6 +51,8 @@ export default function GraphPanel({graphObjects, cameraTarget}: Props) {
                         return <SlidingTangent key={obj.id} {...obj.props} />;
                     case "line":
                         return <Line2D key={obj.id} {...obj.props} />;
+                    case "secantLine":
+                        return <SecantLine key={obj.id} {...obj.props} />;
                     default:
                         return null
                 }
