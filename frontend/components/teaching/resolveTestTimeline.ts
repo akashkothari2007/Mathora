@@ -6,6 +6,7 @@ import {
   shadeAreaTimeline,
   slidingTangentTimeline,
   cameraTimeline,
+  lineTimeline,
 } from "../math/timeline/coreFunctionTests";
 import type { Step } from "../math/types/steps";
 
@@ -16,5 +17,6 @@ export function resolveTestTimeline(prompt: string): Step[] | null {
   if (prompt === "function test") return functionPlotTimeline;
   if (prompt === "tangent test") return slidingTangentTimeline;
   if (prompt === "camera test") return cameraTimeline;
+  if (prompt === "line test") return lineTimeline;
   return null;
 }

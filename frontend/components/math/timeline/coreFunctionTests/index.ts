@@ -1,5 +1,6 @@
-export {pointAndLabelTestTimeline} from './pointAndLabelTimeline'
-export {functionPlotTimeline} from './functionPlotTimeline'
-export {shadeAreaTimeline} from './shadeAreaTimeline'
-export {slidingTangentTimeline} from './slidingTangentTimeline'
-export {cameraTimeline} from './cameraTimeline'
+export { pointAndLabelTestTimeline } from "./pointAndLabelTimeline";
+export { functionPlotTimeline } from "./functionPlotTimeline";
+export { shadeAreaTimeline } from "./shadeAreaTimeline";
+export { slidingTangentTimeline } from "./slidingTangentTimeline";
+export { cameraTimeline } from "./cameraTimeline";
+export { lineTimeline } from "./lineTimeline";
