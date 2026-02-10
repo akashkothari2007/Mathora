@@ -101,6 +101,7 @@ const SecantLinePropsSchema = z.object({
   f: FunctionExprSchema,
   startX: z.number(),
   endX: z.number(),
+  extension: z.number().optional(),
   color: z.string().optional(),
   lineWidth: z.number().optional(),
   pointSize: z.number().optional(),

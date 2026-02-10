@@ -11,6 +11,8 @@ export type SecantLineProps = {
   f: (x: number) => number
   startX: number
   endX: number
+  /** How many units to extend the line past the segment on each side (default 2.5). Makes secant look like a long line for tangent transition. */
+  extension?: number
   color?: string
   lineWidth?: number
   pointSize?: number
@@ -23,6 +25,7 @@ export default function SecantLine({
   color = 'cyan',
   lineWidth = 2,
   pointSize = 0.06,
+  extension = 2.5,
 }: SecantLineProps) {
   const [currentStartX, setCurrentStartX] = useState(startX)
   const [currentEndX, setCurrentEndX] = useState(endX)
@@ -55,14 +58,29 @@ export default function SecantLine({
   const y1 = f(x1)
   const y2 = f(x2)
 
-  const points: [THREE.Vector3, THREE.Vector3] = [
-    new THREE.Vector3(x1, y1, 0),
-    new THREE.Vector3(x2, y2, 0),
+  // Line through (x1,y1) and (x2,y2), extended outward by `extension` units. When x1≈x2 use numerical derivative for tangent.
+  const dx = x2 - x1
+  const dy = y2 - y1
+  const eps = 1e-6
+  const slope =
+    Math.abs(dx) < eps
+      ? (f(x1 + eps) - f(x1 - eps)) / (2 * eps)
+      : dy / dx
+  const xMin = Math.min(x1, x2)
+  const xMax = Math.max(x1, x2)
+  const leftX = xMin - extension
+  const rightX = xMax + extension
+  const leftY = y1 + slope * (leftX - x1)
+  const rightY = y1 + slope * (rightX - x1)
+
+  const linePoints: [THREE.Vector3, THREE.Vector3] = [
+    new THREE.Vector3(leftX, leftY, 0),
+    new THREE.Vector3(rightX, rightY, 0),
   ]
 
   return (
     <group>
-      <Line points={points} color={color} lineWidth={lineWidth} />
+      <Line points={linePoints} color={color} lineWidth={lineWidth} />
       <mesh position={[x1, y1, 0]}>
         <sphereGeometry args={[pointSize, 16, 16]} />
         <meshStandardMaterial color={color} />
