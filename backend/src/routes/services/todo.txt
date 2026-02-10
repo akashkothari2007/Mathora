@@ -1,96 +1,3 @@
-
-HERE WHAT I DID:
-
-what i did rn for sse, it works just issues and its rough:
-so basically we hit backend /start it makes outline and first step and sends it to frontend
-also creates a session in memory, which has id, prompt, outline, what step we on, previous step for context for the llm whatever
-and session also has 'subscribers' rn its empty
-
-so after it does the first step then frontend hits the backend /stream with session id, and then it adds my frontend as a subscriber
-and then it starts the sessionRunner which gets session info using the id i passed through, it sees the outline, what step its on, prev step and sends it
-to generate the next step and then it broadcasts it, a fancy way of saying it fucking just writes it through the stream to the subscriber (frontend)
-
-then theres lots of error handling, when its done delete session delete subscriber
-just understand all ts make sure it makes sense cuz its rough rn
-
-WHAT I DID:
-- planschema basically i found that long ass prompt the ai cant generate a explanation with visuals its way too much to ask
-so basically i made a plan schema and planprompt so in the generate step function it creates an entire plan for the step
-and then makes the actual explanation + visuals json to send back to frontend so the ai doesnt have to think so much for
-each step it can break it down into multiple calls to make it easier 
-- i also made schemas for each prop it works ok sometimes its a little weird but thats so the frontend doesnt receive
-absolute aids when trying to render props on the screen
-- few bug fixes here and there
-
-
-
-QUICK SUMMARY
-
-1. also yk maybe fuck around with the prompt if u want to get it faster after the whole sse is done and fuck around with diff models
-2. also fucking look into like how we can make sure the math is right at the very end maybe a math model idk
-
-WHAT WE NEED TO DO:
-- Fix frontend ui its so shit lol and theres alot of errors that popup the voice to text doesnt say stuff properly sometimes and the whiteboard doesnt output the text right
-- uh the prompt i changed a bit its better but we need to make it easier for the user to understand and interact like rn it doesnt feel like its actually teaching
-it feels like its spewing random ass garbage at u
-- AI needs to be able to make its own axis and graph labels because it tries to explain angles in standard position with a normal x-y graph its retarded
-- functions probably need constraints because ai cant properly draw triangles or anything to explain stuff (also the ai explanation dont match)
-    - experimented with sm models and diff promps but big issue like the ai will say like lets visualize a triangle but then plot a sin function or something that doesnt help in that step
-    - ai also doesnt use the camera function at all always the same static camera
-
-need to have animations not just all start at the beginning. try to have timing maybe between text/narration/animations?
-we dont have that wow factor like rn technically its doing what we say but the visuals dont actually help teach when u look at it
-
-
-
-
-AKASH START READING HERE:
-
-
-
-wow factor humanization frontend shit
-
-You're absolutely right - this is an architectural problem, not a prompt problem. Let me be blunt about why:
-
-Grant Sanderson (3B1B) doesn't use AI and doesn't generate JSON objects. He:
-
-Hand-codes animations in Manim (Python)
-Choreographs timing down to the frame
-Thinks in transformations, not snapshots
-Writes narration AFTER animating
-Your system's structural limitations:
-
-Your primitives are OBJECTS not ANIMATIONS
-
-You have: function, point, label (static things)
-You need: morph, trace, sweep, slide (verbs/actions)
-No timing model - Everything fires at t=0, no choreography
-
-No transformation operations - Can't "morph x² into x³", only replace
-
-Planning thinks in concepts - "explain derivative" not "slide tangent 5 seconds then freeze"
-
-Possible architectural pivots:
-
-A: Pre-built animation library (my recommendation)
-
-Hand-code 30-50 "teaching animation templates" (you + your partner spend 2 weeks building these)
-Examples: DerivativeAsTangentSlide, AreaUnderCurveBuildup, FunctionTransformation, ParameterVaryAnimation
-AI just picks template + sets parameters: {template: "TangentSlide", function: "x*x", range: [-2,2], duration: 5, pausePoints: [0]}
-Covers 80% of calc teaching scenarios
-Scalable: Add templates as you find gaps
-B: Generate Manim code (most like 3B1B)
-
-AI writes Python Manim code instead of JSON
-Render video server-side (slow: 10-30s per step)
-Closest to how Grant actually works
-C Three-phase with timing
-
-Add phase 2.5: "Storyboard" - AI outputs timeline with beats
-Example: 0-2s: graph appears, 2-6s: point traces curve, 6-8s: freeze, 8-10s: tangent appears
-Frontend interprets timeline
-Which direction resonates? The template library is fastest to ship but requires upfront animation work.
-
 Our fundamental problem: The AI generates a static snapshot, not a performance. Everything fires at t=0.
 
 The key question: Can we get good choreography WITHOUT making AI responsible for timing? (since it'll fuck that up)
@@ -108,6 +15,7 @@ Checks implementation matches plan promises
 If plan says "animated tangent sliding" but AI outputs static point → REJECT and retry
 This catches the "AI cutting corners" problem
 
+
 3. Frontend's job (automatic choreography):
 
 Hardcoded animation behavior per object type:
@@ -119,59 +27,6 @@ Automatically sequences actions with smart delays:
 Previous action finishes → next starts (with slight overlap)
 Audio duration known → stretch timing to match
 Creates organic flow without AI picking timing
-Example flow:
-
-Frontend sees this and auto-choreographs into smooth 7-8 second sequence.
-
-Implementation order:
-Week 1: Make objects animate properly (frontend focus)
-
-function → trace animation
-area → Riemann buildup
-Automatic action sequencing with delays
-This alone makes it 10x better
-Week 2: Add validation (backend)
-
-Parse plan commitments ("sliding tangent", "moving point")
-Check implementation delivers on promises
-Retry if mismatch
-Week 3: Refine
-
-Tune timing/delays based on testing
-Improve prompt to emphasize sequential teaching
-Add emphasis behaviors (pulse, highlight)
-This is the move. We're not asking AI to do more (it already can't handle what we ask). We're putting intelligence in the RIGHT places: 
-AI does creative sequencing, system ensures quality execution.
-
-
-
-
-Reality check: 3B1B doesn't have infinite templates. He probably uses ~10-15 core animation patterns across all videos. The magic is:
-
-Using them at the RIGHT moment
-Perfect timing
-Combining them smoothly
-My honest recommendation:
-
-Build NOW (kills 80% of lifelessness):
-
-Function trace
-Auto-sequencing
-Riemann buildup
-Fade in/out
-Build NEXT (after testing for 2-3 days):
-5. Function morph (for limits, approximations)
-6. Emphasis pulse (for "notice this")
-7. Camera zoom (for limit concepts)
-
-Build LATER (when you find specific gaps):
-8. Synchronized animations
-9. Parametric trace
-10. Graph transformations
-
-Start with 4, but yeah - you'll need ~10 total for comprehensive calc coverage. Don't try to build all 10 upfront though. Build 4, test with real teaching, see what's missing.
-
-
 
 Priority 1 (BIGGEST IMPACT): Function Tracing
 
@@ -183,9 +38,10 @@ In FunctionPlot.tsx
 Use Three.js Line.geometry.setDrawRange(0, currentPoints)
 Animate currentPoints from 0 to total using useFrame hook
 Start at 0 points, increment each frame until full curve visible
+Code sketch:
 
 
-code sketch
+
 const [drawProgress, setDrawProgress] = useState(0);
 
 useFrame((state, delta) => {
@@ -212,8 +68,8 @@ add slidingTangent: 4-6s animation
 add point: 0.5s fade
 add area: 3-4s animation
 add label: 0.3s fade
+Logic:
 
-code sketch:
 let cumulativeDelay = 0;
 actions.forEach((action, i) => {
   setTimeout(() => executeAction(action), cumulativeDelay * 1000);
@@ -237,8 +93,6 @@ Stages:
 3-4s: smooth to filled area
 This is what makes integrals feel intuitive and visual.
 
-
-
 Priority 4: Smooth Fade In/Out
 
 For points and labels:
@@ -249,8 +103,13 @@ Fade from 1 to 0 over 0.3s (not instant disappear)
 
 
 
-after, try to build these (USE A FUCK TON OF AI)
 
+The 4 I gave handle:
+
+✅ Introducing functions (trace)
+✅ Showing integrals/accumulation (Riemann buildup)
+✅ Not jarring (fade in/out)
+✅ Sequential reveal (auto-sequence)
 But calculus teaching also needs:
 
 Function morphing - smoothly transform x² into x³ (for showing families of functions, limits, approximations)
@@ -264,3 +123,34 @@ Camera zoom - zoom into x=0 for limit visualization, zoom out to show behavior a
 Parametric trace - point traces curve while simultaneously showing x(t) and y(t) (for parametric/polar)
 
 Graph transformation - stretch/compress/shift existing graph (for function transformations)
+
+
+
+Reality check: 3B1B doesn't have infinite templates. He probably uses ~10-15 core animation patterns across all videos. The magic is:
+
+Using them at the RIGHT moment
+Perfect timing
+Combining them smoothly
+My honest recommendation:
+
+Build NOW (kills 80% of lifelessness):
+
+Function trace
+Auto-sequencing
+Riemann buildup
+Fade in/out
+
+
+
+Build NEXT (after testing for 2-3 days):
+5. Function morph (for limits, approximations)
+6. Emphasis pulse (for "notice this")
+7. Camera zoom (for limit concepts)
+
+Build LATER (when you find specific gaps):
+8. Synchronized animations
+9. Parametric trace
+10. Graph transformations
+
+Start with 4, but yeah - you'll need ~10 total for comprehensive calc coverage. 
+Don't try to build all 10 upfront though. Build 4, test with real teaching, see what's missing.
