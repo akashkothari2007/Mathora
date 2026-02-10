@@ -21,7 +21,7 @@ export const secantLineTimeline: Step[] = [
     ],
   },
   {
-    subtitle: "Add a secant line from x = -2 to x = 2.",
+    subtitle: "Add a secant line from x = -2 to x = 2 (line extends past the points).",
     actions: [
       {
         type: "add",
@@ -32,6 +32,7 @@ export const secantLineTimeline: Step[] = [
             f: (x: number) => 0.5 * x * x - 1,
             startX: -2,
             endX: 2,
+            extension: 2.5,
             color: "cyan",
             lineWidth: 2,
             pointSize: 0.06,
@@ -62,6 +63,19 @@ export const secantLineTimeline: Step[] = [
         props: {
           startX: 0.5,
           endX: 1.5,
+        },
+      },
+    ],
+  },
+  {
+    subtitle: "Tangent limit: almost a single point — line still extends as tangent.",
+    actions: [
+      {
+        type: "update",
+        id: "sec_1",
+        props: {
+          startX: 1,
+          endX: 1.001,
         },
       },
     ],
