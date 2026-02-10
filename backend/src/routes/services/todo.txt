@@ -1,179 +1,46 @@
-You're absolutely right. This is a pedagogy problem, not a technical animation problem. Let me frame this properly:
 
-The Real Problem: We're showing math, not teaching it
-What 3B1B does (that we don't):
+HERE WHAT I DID:
 
-1. ONE THING AT A TIME
-Only ONE element moves/changes while narration explains it
-Everything else is frozen
-This controls where student looks
-We do: Curve appears, tangent slides, point moves, all at once → cognitive overload
+what i did rn for sse, it works just issues and its rough:
+so basically we hit backend /start it makes outline and first step and sends it to frontend
+also creates a session in memory, which has id, prompt, outline, what step we on, previous step for context for the llm whatever
+and session also has 'subscribers' rn its empty
 
-Fix needed: Force AI to generate micro-steps. Each step = ONE visual event + ONE insight.
+so after it does the first step then frontend hits the backend /stream with session id, and then it adds my frontend as a subscriber
+and then it starts the sessionRunner which gets session info using the id i passed through, it sees the outline, what step its on, prev step and sends it
+to generate the next step and then it broadcasts it, a fancy way of saying it fucking just writes it through the stream to the subscriber (frontend)
 
-2. BUILD ANTICIPATION BEFORE REVEALING
-Narration asks question FIRST → pause → then visual answers
-"What happens as h gets smaller? Watch..." → THEN tangent appears
-We do: Visual already shows answer while narration is explaining setup
+then theres lots of error handling, when its done delete session delete subscriber
+just understand all ts make sure it makes sense cuz its rough rn
 
-Fix needed: Narration controls visual timing, not the other way around. Visual waits for cue words.
-
-3. REPEAT THE IMPORTANT PART 3 TIMES
-Show derivative as "slope of tangent"
-Show it again as "rise over run"
-Show it again as "rate of change"
-Same concept, 3 visual angles
-We do: Show it once, move on → student misses it
-
-Fix needed: Outline generation should CREATE repetition. Same concept across 3 consecutive steps.
+WHAT I DID:
+- planschema basically i found that long ass prompt the ai cant generate a explanation with visuals its way too much to ask
+so basically i made a plan schema and planprompt so in the generate step function it creates an entire plan for the step
+and then makes the actual explanation + visuals json to send back to frontend so the ai doesnt have to think so much for
+each step it can break it down into multiple calls to make it easier 
+- i also made schemas for each prop it works ok sometimes its a little weird but thats so the frontend doesnt receive
+absolute aids when trying to render props on the screen
+- few bug fixes here and there
 
 
 
-4. START ABSURDLY SIMPLE
-"Here's a curve" (pause, let them see)
-"Let's pick one point" (pause, point appears)
-"What's the slope here?" (pause)
-"We need a line" (tangent appears)
-We do: Start with complex formula + animated tangent + moving point all at once
+QUICK SUMMARY
 
-Fix needed: Break steps into smaller atoms. Current 8 steps → should be 20 micro-steps.
+1. also yk maybe fuck around with the prompt if u want to get it faster after the whole sse is done and fuck around with diff models
+2. also fucking look into like how we can make sure the math is right at the very end maybe a math model idk
 
-6. HIGHLIGHT WHAT'S BEING DISCUSSED
-While saying "notice THIS point" → point pulses/glows
-While saying "as we move along" → only tangent moves, curve is dim
-Controls attention explicitly
-We do: Everything same brightness, nothing emphasized → student doesn't know where to look
+WHAT WE NEED TO DO:
+- Fix frontend ui its so shit lol and theres alot of errors that popup the voice to text doesnt say stuff properly sometimes and the whiteboard doesnt output the text right
+- uh the prompt i changed a bit its better but we need to make it easier for the user to understand and interact like rn it doesnt feel like its actually teaching
+it feels like its spewing random ass garbage at u
+- AI needs to be able to make its own axis and graph labels because it tries to explain angles in standard position with a normal x-y graph its retarded
+- functions probably need constraints because ai cant properly draw triangles or anything to explain stuff (also the ai explanation dont match)
+    - experimented with sm models and diff promps but big issue like the ai will say like lets visualize a triangle but then plot a sin function or something that doesnt help in that step
+    - ai also doesnt use the camera function at all always the same static camera
 
-Fix needed: Frontend adds emphasis/dimming based on what's active. Backend tags which object is "focus" each moment.
+need to have animations not just all start at the beginning. try to have timing maybe between text/narration/animations?
+we dont have that wow factor like rn technically its doing what we say but the visuals dont actually help teach when u look at it
 
-
-
-
-The Real Fix: Outline generation needs to be 3x more granular
-Your friend is right - you HAVE the animations. The problem is step granularity.
-
-Current outline for "find derivative of x²":
-1. Introduce derivative concept
-2. Show limit definition  
-3. Apply to x²
-4. Simplify algebra
-5. Conclusion
-
-Should be:
-
-1. Here's the curve x²
-2. Pick one point on it
-3. What's the slope at this point?
-4. We need two points to find slope
-5. Let's pick a second point nearby
-6. Calculate rise over run
-7. What if we move the points closer?
-8. Watch the slope value change
-9. As distance goes to zero...
-10. This is called the limit
-11. Let's write that as a formula
-12. Now apply this to x²
-13. Substitute into formula
-14. Expand (x+h)²
-15. Simplify the algebra
-16. Cancel the h terms
-17. Take the limit as h→0
-18. We get 2x
-
-The Core Truth: Narration timing controls visual timing
-3B1B's actual workflow:
-
-He writes the script with BEATS: "Here's a curve. [PAUSE] Now watch this point. [SHOW ANIMATION] See how it moves? [LET IT FINISH] That's a derivative."
-He codes visuals to sync with those beats
-The audio and visual are perfectly locked
-Your current flow (broken):
-
-Step fires → All actions happen at t=0 → Audio plays → No sync
-
-what we need:
-ONE STEP = ONE SENTENCE + ONE VISUAL MOMENT
-
-Step plays this way:
-1. Audio starts playing (TTS of subtitle)
-2. 1 second into audio → visual action fires
-3. Visual action completes 
-4. Audio finishes
-5. 0.5s pause (silence, static visual)
-6. Next step begins
-
-Total: ~5-8 seconds per micro-step
-
-Rule 3: One object is "active" (focus)
-AI tags: "activeObject": "f1" in each step
-Frontend: active object = 100% opacity
-All other objects = 30% opacity + blur slightly
-Creates spotlight effect
-Rule 4: Natural language cues trigger actions
-AI writes subtitle with implicit timing:
-
-"Here's the curve" → curve traces (2s)
-"Notice this point" → point appears (0.5s)
-"Watch what happens" → animation starts
-"See how it changes?" → animation completes, pause 1s
-
-
-Student asks: "What's the derivative of sin(x)?"
-
-Mathora responds like a human tutor:
-
-Shows curve drawing itself slowly (not instant pop)
-"Here's sine of x" - curve traces, student watches
-Pause. Curve stays, everything quiet.
-"Pick any point" - spotlight on one point, everything else dims
-Point appears. Audio finishes. 0.5s silence.
-"What's happening at THIS exact point?" - point pulses
-Student's attention is locked on that one spot
-"Let's see the slope" - tangent line appears at that point
-Tangent slides along curve while narration explains
-Each moment builds on the last
-Student actually GETS it because they saw it build step by step
-vs Current (what you have now):
-
-Graph appears instantly
-Tangent, point, curve all show up at once
-Narration plays while student stares at static image
-No wow factor, no learning
-
-
-
-What gets built:
-
-AI generates question-then-answer patterns
-Concepts repeated 3 different ways
-Starts absurdly simple, builds complexity
-Emphasis/pulse on active objects
-What student sees: "Oh THAT'S what a derivative is!"
- - actual learning happens. Feels like Khan Academy + 3Blue1Brown had a baby.
-
-
-
-
-
-
- https://www.youtube.com/watch?v=rfG8ce4nNh0
- good example start at 2:40 and watch the car example till 3:40
-
- notice all these animations we have already:
- area under graph
- labelling
- axis
-
- what separates this to ours is the timing and the way he highlights stuff.
- watch it twice and notice the way he highlights stuff and times it just after he says something 
- it highlights. 
- explanation also relatable "im right there with u" but thats just like the ai ngl we dont have
- alot of control over that
-
- "horizontal direction has units of seconds" -> highlights time axis and label.
- same thing for vertical
-
- right after it even highlights the shaded area to emphasize it
-
- even the tiny animation after with the graph point moving with label "always changing"
- watch that part notice how the graph gets dimmer and then it puts "lines" or points when it talks about it
-point is highlighted everything else is dim
+HOLA HERES QUICK SUMMARY:
+1. fuck the audio for now thats an easy fix ill fix it Later
+2. fuck the timing for now (templates will fix that)
