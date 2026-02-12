@@ -31,7 +31,7 @@ Your job: output only the graph actions (and optional cameraTarget) that fulfill
 CURRENT GRAPH: ${JSON.stringify(objects ?? {})}
 
 ACTIONS YOU CAN USE:
-- add: put a new object on the graph (use new IDs: f1, pt1, tan1, area1, sec1, ln1, lbl1).
+- add: put a new object on the graph (use new IDs: f1, pt1, tan1, area1, sec1, ln1, lbl1), no reusing ids
 - update: change props of an existing object by id (e.g. move a point, change secant endpoints).
 - remove: remove an object by id (e.g. when moving to a new concept).
 
@@ -101,30 +101,43 @@ Question: ${JSON.stringify(userQuestion)}
 
 export function buildOutlinePrompt(userQuestion: string) {
   return `
-Return ONLY valid JSON in this shape:
+You are writing a short lesson outline. The outline is what brings everything together: cohesive story, great explanations, and clear instructions for what to draw each step.
+
+Return ONLY valid JSON:
 { "outline": [ { "subtitle": string, "visualGoal": string }, ... ] }
 
-For each step you must return two things:
-1. "subtitle" — the full narration for that step (3–5 sentences the user will hear, like a 3Blue1Brown script).
-2. "visualGoal" — a short, concrete instruction for what to do on the graph THIS step only. This spreads actions across steps so the lesson builds gradually.
+---
 
-Visual goal rules (critical for good order):
-- Early steps: often "Add nothing" or "Add nothing; just set the stage." so the first step doesn't dump everything. Save the main function for the step where you actually introduce it.
-- Then one clear action per step: "Add the function f(x)=x².", "Add a secant line from x=-1 to x=2.", "Update the secant to narrow toward x=1.", "Add a point at (1,1).", "Remove the secant; add the tangent line.", etc.
-- Match the subtitle: if the narration introduces the secant in step 2, the visualGoal for step 2 should add the secant. If step 3 says "move the points closer", visualGoal should update the secant (or move a point).
-- Order so the user learns: introduce one visual at a time, then update/remove as the story progresses.
+SUBTITLE (the main teaching content — 3–5 sentences the user will hear)
+- Style: like 3Blue1Brown. Explain WHY before formulas. Build from basics; assume no prior knowledge.
+- Use analogies and "what if we..." so it feels like a conversation. One main idea per step.
+- Natural, friendly tone. Make the intuition crystal clear; then the math follows.
+- No jargon dumps. If you use a term, briefly say what it means.
+
+---
+
+VISUAL GOAL (simple, short — what to draw this step only)
+- Plain words: "add nothing", "add a simple function", "add a line", "add a secant", "update the secant", "add a point", "draw a triangle" (with lines), "shade the area", etc.
+- One step = one (or two) clear actions. Spread visuals across steps so the lesson builds.
+- First step often: "Add nothing." so we don't dump the graph before the intro.
+- Match the subtitle: when you say "here's the curve", that step's goal is "add the function". When you say "draw the line between two points", that step's goal is "add a secant line" or "add a line".
+- Make sure you finish the lesson with the whole goal visually to not leave the user hanging it should be complete, accurate and make sense to users who are unfamiliar with the topic
+
+---
 
 IF the user asks anything that is NOT a math question (slurs, politics, history, personal advice, etc.):
 - Return: { "outline": [ { "subtitle": "Error: I can only help with math questions.", "visualGoal": "none" } ] }
-- Do NOT attempt to answer
 
-Example outline for "Explain the derivative":
+---
+
+Example for "Explain the derivative":
 [
-  { "subtitle": "Let's build the idea of slope at a single point. So far we know slope for a line — rise over run. But a curve is different at every point.", "visualGoal": "Add nothing." },
-  { "subtitle": "Here's a trick: take two points on the curve and draw the line between them. That line is called a secant. Its slope is the average rate of change between those two points.", "visualGoal": "Add the function f(x)=x*x. Add a secant line from x=-1 to x=2." },
-  { "subtitle": "Now imagine moving the second point closer and closer to the first. The secant line starts to rotate and approach a limiting line — the tangent.", "visualGoal": "Update the secant to narrow toward x=1 (e.g. startX 0.5, endX 1.5)." },
-  { "subtitle": "The slope of that tangent is the derivative at that point. So the derivative is the instantaneous rate of change.", "visualGoal": "Optionally add a point at (1,1) or leave as is. Do not remove the function or secant unless the story moves on." }
+  { "subtitle": "What if we could measure how steep a curve is at a single point? That's exactly what the derivative does. Think of driving a car: your speedometer shows how fast you're going right now — that's the derivative of your position.", "visualGoal": "Add nothing." },
+  { "subtitle": "Here's a trick. Take two points on the curve and draw the line between them. That line is called a secant. Its slope is the average rate of change between those two points — like your average speed over a stretch of road.", "visualGoal": "Add a simple function like x squared. Add a secant line between two x values." },
+  { "subtitle": "Now imagine moving the second point closer and closer to the first. The secant line rotates and approaches a limiting line — the tangent. That tangent just kisses the curve at one point.", "visualGoal": "Update the secant so the two points are closer together, near x=1." },
+  { "subtitle": "The slope of that tangent line is the derivative at that point. So the derivative is the instantaneous rate of change: how fast things are changing right at that moment.", "visualGoal": "Add a point at the spot where the tangent touches, or leave as is." }
 ]
+4-7 steps is fine may vary
 
 Question:
 ${JSON.stringify(userQuestion)}
