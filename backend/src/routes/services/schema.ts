@@ -150,7 +150,7 @@ export const ObjectSchema = z.discriminatedUnion("type", [
   }),
   z.object({
     id: CleanedString,
-    type: z.literal("SecantLine"),
+    type: z.literal("secantLine"),
     props: SecantLineSchema,
   }),
   z.object({
@@ -195,8 +195,22 @@ export const StepSchema = z.object({
   cameraTarget: CameraTargetSchema.nullable().optional(),
   actions: z.array(ActionSchema).optional(),
   whiteboardLines: z.array(z.string()).optional(),
-})
+});
+
+/** AI returns only actions + optional cameraTarget; we inject subtitle from outline. */
+export const StepGenerationResponseSchema = z.object({
+  actions: z.array(ActionSchema).optional(),
+  cameraTarget: CameraTargetSchema.nullable().optional(),
+});
 
 export const TimelineSchema = z.array(StepSchema);
-export type Action = z.infer<typeof ActionSchema>
-export type Step = z.infer<typeof StepSchema> 
+export type Action = z.infer<typeof ActionSchema>;
+export type Step = z.infer<typeof StepSchema>;
+
+/** One step in the lesson outline: narration + what to show this step. */
+export const OutlineStepSchema = z.object({
+  subtitle: CleanedString,
+  visualGoal: CleanedString,
+});
+export type OutlineStep = z.infer<typeof OutlineStepSchema>;
+export const OutlineSchema = z.array(OutlineStepSchema); 

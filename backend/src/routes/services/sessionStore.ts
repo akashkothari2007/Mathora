@@ -1,10 +1,11 @@
 import type { Action, Step } from "./schema";
+import type { OutlineStep } from "./schema";
 import type { Response } from "express";
 
 export type Session = {
     id: string;
     prompt: string;
-    outline: string[];
+    outline: OutlineStep[];
     currentStep: number;
     prevStep: Step | null;
 
@@ -25,7 +26,7 @@ function makeId() {
 //create new session
 export function createSession(args: {
     prompt: string;
-    outline: string[]
+    outline: OutlineStep[];
     firstStep: Step;
 }): Session {
     const id = makeId();
@@ -82,9 +83,10 @@ export function deleteSession(sessionId: string) {
     s.currentStep += 1;
 
     update_object_state(s, step)
+    console.log(s.objects)
     if (step.whiteboardLines) {
-    s.whiteboardLines = s.whiteboardLines.concat(step.whiteboardLines);
-  }
+      s.whiteboardLines = s.whiteboardLines.concat(step.whiteboardLines);
+    }
     console.log(`[Backend] [SSE] Committed step ${s.currentStep}, now at step ${s.currentStep + 1}/${s.outline.length}`);
   }
   //if steps run out stop streaming

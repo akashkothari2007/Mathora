@@ -27,16 +27,15 @@ router.post("/start", async (req, res) => {
 
     const outline = await generateOutline(prompt);
     console.log(`[Backend] [${requestId}] Outline generated (${outline.length} steps)`);
-    if (outline.length === 1 && outline[0].startsWith("Error:")) {
+    if (outline.length === 1 && outline[0].subtitle?.startsWith("Error:")) {
       const errorStep = {
-        subtitle: "I can only help with math questions. Try asking about calculus, algebra, or geometry!",
+        subtitle: outline[0].subtitle.replace(/^Error:\s*/i, "") || "I can only help with math questions. Try asking about calculus, algebra, or geometry!",
         actions: [],
-        whiteboardLines: []
-        };
-      const session = createSession({ 
-        prompt, 
-        outline: ["Invalid question"], 
-        firstStep: errorStep 
+      };
+      const session = createSession({
+        prompt,
+        outline,
+        firstStep: errorStep,
       });
       return res.json({
         sessionId: session.id,

@@ -1,10 +1,11 @@
 import { Action, Step, TimelineSchema } from "./schema";
-import {buildPrompt } from "./prompt";
+import type { OutlineStep } from "./schema";
+import { buildPrompt } from "./prompt";
 import { buildOutlinePrompt } from "./prompt";
 import dotenv from "dotenv";
-import {jsonrepair} from 'jsonrepair';
+import { jsonrepair } from "jsonrepair";
 import { string } from "zod/v4/core/regexes";
-import {StepSchema} from "./schema";
+import { StepSchema, StepGenerationResponseSchema, OutlineSchema } from "./schema";
 dotenv.config();
 
 const API_KEY = process.env.DEEPSEEK_API_KEY;
@@ -26,7 +27,7 @@ type DeepSeekResponse = {
 };
 
 
-export async function generateOutline(question: string): Promise<string[]> {
+export async function generateOutline(question: string): Promise<OutlineStep[]> {
   const prompt = buildOutlinePrompt(question);
 
   const raw = await callAzureOpenAI(prompt);
@@ -42,31 +43,51 @@ export async function generateOutline(question: string): Promise<string[]> {
   if (!Array.isArray(parsed.outline)) {
     throw new Error("Generated outline is not an array");
   }
-
-  return parsed.outline;
+  const outline = OutlineSchema.parse(parsed.outline);
+  console.log(outline);
+  return outline;
 }
 
-export async function generateStep(question: string, step_number:number, outline: string[], previousStepJson?: string, objects?: Record<string, NonNullable<Action["object"]>>, whiteboardLines?: string[]){
-  let max_attempts = 3;
-  
+export async function generateStep(
+  question: string,
+  step_number: number,
+  outline: OutlineStep[],
+  previousStepJson?: string,
+  objects?: Record<string, NonNullable<Action["object"]>>,
+  whiteboardLines?: string[]
+): Promise<Step> {
+  const max_attempts = 3;
+  const subtitleFromOutline = outline[step_number]?.subtitle ?? "";
+
   for (let attempt = 1; attempt <= max_attempts; attempt++) {
     try {
       const prompt = buildPrompt(question, step_number, outline, previousStepJson, objects, whiteboardLines);
       const raw = await callAzureOpenAI(prompt);
       const cleaned = raw.trim().replace(/^```json\s*/i, "").replace(/^```\s*/i, "").replace(/\s*```$/, "");
-      const parsed = StepSchema.parse(JSON.parse(cleaned));
-      
-      return parsed;
-    }
-    catch (e:any) {
+      const parsed = StepGenerationResponseSchema.parse(JSON.parse(cleaned));
+
+      const step: Step = {
+        subtitle: subtitleFromOutline ?? "",
+        actions: parsed.actions ?? [],
+        cameraTarget: parsed.cameraTarget ?? undefined,
+      };
+      StepSchema.parse(step);
+      return step;
+    } catch (e: any) {
       if (attempt === max_attempts) {
         console.error(`[Backend] [LLM] Failed after ${max_attempts} attempts:`, e?.message || e);
-        return fallbackStep;
+        return {
+          ...fallbackStep,
+          subtitle: subtitleFromOutline ?? fallbackStep.subtitle,
+        };
       }
     }
   }
-  
-  return fallbackStep;
+
+  return {
+    ...fallbackStep,
+    subtitle: subtitleFromOutline ?? fallbackStep.subtitle,
+  };
 }
 
 

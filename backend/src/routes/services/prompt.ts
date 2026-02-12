@@ -1,118 +1,94 @@
-import strict from "assert/strict";
 import { Action } from "./schema";
+import type { OutlineStep } from "./schema";
 
 export function buildPrompt(
   userQuestion: string,
   stepNumber: number,
-  outline: string[],
+  outline: OutlineStep[],
   previousStepsJson?: string,
   objects?: Record<string, NonNullable<Action["object"]>>,
-  whiteboardLines?: string[]
+  _whiteboardLines?: string[]
 ) {
+  const stepInfo = outline[stepNumber];
+  const stepSubtitle = stepInfo?.subtitle ?? "";
+  const stepVisualGoal = stepInfo?.visualGoal ?? "";
   return `
 
 You are generating step ${stepNumber + 1} of ${outline.length}.
-GOAL: "${outline[stepNumber]}"
 
-TEACHING PHILOSOPHY:
-- Explain WHY before showing formulas
-- Build from absolute basics - assume zero prior knowledge
-- Show EVERY algebraic step (never skip work)
-- Make intuition crystal clear before introducing math
+THIS STEP'S NARRATION (what the user will hear — do not change it):
+"""
+${stepSubtitle}
+"""
 
-SUBTITLE (3-5 sentences):
-This is what the user HEARS via voice.
-- Explain what we're doing this step
-- WHY it matters conceptually
-- What to notice in the visual/algebra
-- Use natural teaching language
+THIS STEP'S VISUAL GOAL (exactly what to do on the graph this step — match this):
+"""
+${stepVisualGoal}
+"""
 
-Example: "Let's see what a derivative really means. Imagine driving a car - your speedometer shows how fast you're going at each moment. That's exactly what a derivative does for any function: it tells us the rate of change at each point. We'll use the limit definition to find this mathematically."
+Your job: output only the graph actions (and optional cameraTarget) that fulfill the visual goal above. Do NOT generate a subtitle. Do only what this step asks: e.g. if the goal says "add nothing", return empty actions; if it says "add the function", add the function; if it says "update the secant", update the existing secant. Build on objects from previous steps; do not re-add what is already there unless the goal says to replace it.
 
-GRAPH OBJECTS - USE SPARINGLY:
-Current objects on graph: ${JSON.stringify(objects ?? {})}
+CURRENT GRAPH: ${JSON.stringify(objects ?? {})}
 
-Use NEW IDs for new objects (f2, pt2, etc), NOT same IDs.
+ACTIONS YOU CAN USE:
+- add: put a new object on the graph (use new IDs: f1, pt1, tan1, area1, sec1, ln1, lbl1).
+- update: change props of an existing object by id (e.g. move a point, change secant endpoints).
+- remove: remove an object by id (e.g. when moving to a new concept).
 
-WHEN TO ADD OBJECTS:
-function: When introducing a NEW function to visualize
-point: When highlighting a SPECIFIC value (e.g., f(2) = 4)
-slidingTangent: When showing derivative visually
-area: When discussing integrals or area under curve
-label: RARELY - only for critical annotations NOT on whiteboard
-SecantLine: When showing secant line between two points on a function
-Line2D: When drawing a static line segment
+GUIDELINES:
+- 1–4 actions per step is fine. Add only what teaches.
+- Remove or update when it helps the story (e.g. remove old points when highlighting a new one).
+- Don't add decoration. Every object should support the explanation.
 
-DON'T ADD:
-- Decorative objects that don't teach
-- Multiple functions unless comparing them
-- Points that aren't referenced in explanation
-- Labels that repeat whiteboard content
-- More than 2-3 NEW objects per step
+OBJECT TYPES AND PROPS (numbers must be bare, not strings):
 
-OBJECT FORMATS (EXACT SYNTAX - ALL NUMBERS MUST BE BARE, NOT QUOTED):
+function — graph y = f(x). Optional: xmin, xmax (default -5..5), color, lineWidth.
+  add: {"type":"add","object":{"id":"f1","type":"function","props":{"f":"x*x","xmin":-3,"xmax":3,"color":"#4ade80"}}}
 
-function:
-{"type":"add","object":{"id":"f1","type":"function","props":{"f":"x*x","color":"blue"}}}
+point — dot at (x,y). Optional: color, size. Can animate or follow a function.
+  add: {"type":"add","object":{"id":"pt1","type":"point","props":{"position":{"x":1,"y":1},"color":"red"}}}
+  point that moves along f from startX to endX over duration seconds:
+  {"type":"add","object":{"id":"pt1","type":"point","props":{"position":{"x":0,"y":0},"followFunction":{"f":"x*x","startX":-2,"endX":2,"duration":3}}}}
+  point that animates to a new position:
+  {"type":"add","object":{"id":"pt1","type":"point","props":{"position":{"x":0,"y":0},"animateTo":{"x":2,"y":4},"animateDuration":1.5}}}
+  update position: {"type":"update","id":"pt1","props":{"position":{"x":2,"y":4}}}
 
-point:
-{"type":"add","object":{"id":"pt1","type":"point","props":{"position":{"x":1,"y":1},"color":"red"}}}
-CRITICAL: x and y must be NUMBERS not strings: {"x":1,"y":1} NOT {"x":"1","y":"1"}
-Use position:{x,y} wrapper, NOT direct x,y
+label — text at (x,y). Optional: color, fontSize.
+  {"type":"add","object":{"id":"lbl1","type":"label","props":{"text":"slope here","position":{"x":1,"y":1}}}}
 
-label:
-{"type":"add","object":{"id":"lbl1","type":"label","props":{"text":"Peak","position":{"x":0,"y":1}}}}
-CRITICAL: x and y must be NUMBERS not strings
+slidingTangent — tangent line that slides along f from startX to endX. Optional: duration, xmin, xmax, color, lineWidth.
+  {"type":"add","object":{"id":"tan1","type":"slidingTangent","props":{"f":"x*x","startX":-2,"endX":2,"duration":2}}}
 
-slidingTangent:
-{"type":"add","object":{"id":"tan1","type":"slidingTangent","props":{"f":"x*x","startX":-2,"endX":2}}}
+secantLine — line through (startX, f(startX)) and (endX, f(endX)); good for "average rate" then limit. Optional: extension, color, lineWidth, pointSize.
+  {"type":"add","object":{"id":"sec1","type":"secantLine","props":{"f":"x*x","startX":-1,"endX":2}}}
+  update: {"type":"update","id":"sec1","props":{"startX":0.5,"endX":1.5}}
 
-area:
-{"type":"add","object":{"id":"area1","type":"area","props":{"f":"x*x","xmin":0,"xmax":2}}}
+line — straight segment from start to end. Optional: color, lineWidth.
+  {"type":"add","object":{"id":"ln1","type":"line","props":{"start":{"x":0,"y":0},"end":{"x":2,"y":1},"color":"white"}}}
 
-SecantLine:
-{"type":"add","object":{"id":"sec1","type":"SecantLine","props":{"f":"x*x","startX":1,"endX":3,"color":"orange"}}}
+area — shaded region under f (and optionally between g and f). Required: xmin, xmax. Optional: g, color, opacity, steps.
+  {"type":"add","object":{"id":"area1","type":"area","props":{"f":"x*x","xmin":0,"xmax":2,"color":"#22c55e","opacity":0.4}}}
 
-Line2D:
-{"type":"add","object":{"id":"line1","type":"Line2D","props":{"start":{"x":0,"y":0},"end":{"x":2,"y":4},"color":"purple"}}}
+REMOVE:
+  {"type":"remove","id":"pt1"}
 
-WHITEBOARD (LaTeX):
-Current: ${JSON.stringify(whiteboardLines ?? [])}
+cameraTarget (optional) — frame the view. Use when you want to zoom or focus on a region.
+- center: [x, y, 0] (where to look)
+- width: horizontal span in world units (e.g. 6)
+- height: vertical span in world units (e.g. 4)
+Give only what matters: e.g. just height to zoom vertically, or just width. If you give both, we fit both (camera backs up so both are visible). Omit entirely for default view.
+  {"cameraTarget":{"center":[0,0,0],"width":8}}
+  {"cameraTarget":{"center":[1,1,0],"height":3}}
 
-Add 2-4 NEW lines showing work:
-- Don't repeat existing lines
-- Show each algebra transformation
-- Use proper LaTeX: \\lim_{h \\to 0}, \\frac{a}{b}, \\sin(x)
+RULES:
+- All numbers bare: {"x":1,"y":1} not {"x":"1","y":"1"}.
+- Function f: use a string the frontend can eval: "x*x", "Math.sin(x)", "2*x+1".
+- Use 3.14159265359 for pi if needed.
 
-EXAMPLES:
-
-GOOD STEP (clear, focused):
+OUTPUT: Only valid JSON, no markdown or backticks. Do not include subtitle.
 {
-  "subtitle": "We'll use the limit definition of a derivative. This formula finds the slope by taking two points infinitely close together. As h gets smaller and smaller, we zoom in on the exact slope at one point. Let's work through the algebra step by step.",
-  "actions": [
-    {"type":"add","object":{"id":"f1","type":"function","props":{"f":"x*x","color":"blue"}}}
-  ],
-  "whiteboardLines": [
-    "f'(x) = \\lim_{h \\to 0} \\frac{f(x+h) - f(x)}{h}",
-    "= \\lim_{h \\to 0} \\frac{(x+h)^2 - x^2}{h}",
-    "= \\lim_{h \\to 0} \\frac{2xh + h^2}{h}",
-    "= 2x"
-  ]
-}
-
-CRITICAL RULES:
-- All numbers must be bare: {"x":1} NOT {"x":"1"}
-- Use 3.14159265359 NOT Math.PI
-- Function expressions: "x*x", "Math.sin(x)", "Math.cos(x)*x"
-- Max 2-3 NEW objects per step (1-2 is best)
-- UNQIIDs: f1, f2, tan1, pt1, area1, lbl1
-
-OUTPUT FORMAT:
-Return ONLY raw JSON (no markdown, no backticks, no explanation):
-{
-  "subtitle": "...",
   "actions": [...],
-  "whiteboardLines": [...]
+  "cameraTarget": { ... } or omit
 }
 
 Context:
@@ -126,28 +102,29 @@ Question: ${JSON.stringify(userQuestion)}
 export function buildOutlinePrompt(userQuestion: string) {
   return `
 Return ONLY valid JSON in this shape:
-{ "outline": string[] }
+{ "outline": [ { "subtitle": string, "visualGoal": string }, ... ] }
 
-Rules:
-- 4–15 steps
-- Each step is a short teaching goal (3–8 words)
-- No explanations
-- No extra keys
+For each step you must return two things:
+1. "subtitle" — the full narration for that step (3–5 sentences the user will hear, like a 3Blue1Brown script).
+2. "visualGoal" — a short, concrete instruction for what to do on the graph THIS step only. This spreads actions across steps so the lesson builds gradually.
+
+Visual goal rules (critical for good order):
+- Early steps: often "Add nothing" or "Add nothing; just set the stage." so the first step doesn't dump everything. Save the main function for the step where you actually introduce it.
+- Then one clear action per step: "Add the function f(x)=x².", "Add a secant line from x=-1 to x=2.", "Update the secant to narrow toward x=1.", "Add a point at (1,1).", "Remove the secant; add the tangent line.", etc.
+- Match the subtitle: if the narration introduces the secant in step 2, the visualGoal for step 2 should add the secant. If step 3 says "move the points closer", visualGoal should update the secant (or move a point).
+- Order so the user learns: introduce one visual at a time, then update/remove as the story progresses.
+
 IF the user asks anything that is NOT a math question (slurs, politics, history, personal advice, etc.):
-- Return: { "outline": ["Error: I can only help with math questions"] }
+- Return: { "outline": [ { "subtitle": "Error: I can only help with math questions.", "visualGoal": "none" } ] }
 - Do NOT attempt to answer
-- Do NOT explain history, politics, slurs, current events, or non-math topics
-Examples of VALID questions:
-- "Explain derivatives"
-- "What is the chain rule?"
-- "How do I find the area under a curve?"
 
-Examples of INVALID questions (respond with error message):
-- Questions with slurs or offensive language
-- Historical questions
-- Political questions  
-- Personal advice
-- Anything not related to calculus, algebra, or math
+Example outline for "Explain the derivative":
+[
+  { "subtitle": "Let's build the idea of slope at a single point. So far we know slope for a line — rise over run. But a curve is different at every point.", "visualGoal": "Add nothing." },
+  { "subtitle": "Here's a trick: take two points on the curve and draw the line between them. That line is called a secant. Its slope is the average rate of change between those two points.", "visualGoal": "Add the function f(x)=x*x. Add a secant line from x=-1 to x=2." },
+  { "subtitle": "Now imagine moving the second point closer and closer to the first. The secant line starts to rotate and approach a limiting line — the tangent.", "visualGoal": "Update the secant to narrow toward x=1 (e.g. startX 0.5, endX 1.5)." },
+  { "subtitle": "The slope of that tangent is the derivative at that point. So the derivative is the instantaneous rate of change.", "visualGoal": "Optionally add a point at (1,1) or leave as is. Do not remove the function or secant unless the story moves on." }
+]
 
 Question:
 ${JSON.stringify(userQuestion)}
