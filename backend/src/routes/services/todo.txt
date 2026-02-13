@@ -75,3 +75,27 @@ FRONTEND SO FAR
  [add point, ""] (SO IF NO SUBTITLE IT RUNS INSTANTLY SO IT SORT OF GROUPS THE TWO POINTS)
  [add point, "and it's roots]
  [add label, "x = 2 and x = -2"]
+
+
+ The backend tracks which objects are “active” (the main focus or being changed in the current step).
+- new schema enum for the type of attentionanimations we can do i made a simple list:
+Normal
+Dimmed
+Highlighted
+Popped
+Translated
+scale _up
+Scale_down
+
+
+When the AI generates actions for a step, each object can have an optional 
+attentionState (like "pop", "highlight", "dim", etc.) in its data (the ai doesnt pick it)
+
+After the AI responds, an AttentionManager reviews all objects and decides which ones should get special 
+attention effects—usually only the main new or updated objects, not everything.
+^- based on rules i wont make them rn but if u make everything else ill test out diff rules find out the best one its the same process as finding a good prompt ngl just test shit
+
+
+The backend sends this info to the frontend.
+The frontend looks at each object’s attentionState and animates it: for example, popping in a new point, highlighting a key function, or dimming background elements.
+Most objects stay normal; only a few get attention effects per step, making the animation feel polished and focused, not overwhelming.
