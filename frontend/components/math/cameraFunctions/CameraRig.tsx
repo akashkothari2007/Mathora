@@ -180,8 +180,8 @@ useEffect(() => {
     const H = cameraTarget.height;
 
     // distance needed to fit width and height (if provided)
-    const distW = W ? (W / (2 * Math.tan(hFov / 2))) : 0;
-    const distH = H ? (H / (2 * Math.tan(vFov / 2))) : 0;
+    const distW = W ? ((W+2) / (2 * Math.tan(hFov / 2))) : 0;
+    const distH = H ? ((H+2) / (2 * Math.tan(vFov / 2))) : 0;
 
     // pick the larger (further back) so BOTH fit
     const distance = Math.max(distW, distH);

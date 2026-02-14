@@ -1,11 +1,14 @@
 'use client'
 
 import { Line } from '@react-three/drei'
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useMemo } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
+import { AttentionState } from '../types/attentionStates'
 
 const MORPH_DURATION = 1
+const DRAW_STEPS = 500
+const DRAW_DURATION = 1
 
 export type SecantLineProps = {
   f: (x: number) => number
@@ -16,6 +19,7 @@ export type SecantLineProps = {
   color?: string
   lineWidth?: number
   pointSize?: number
+  attentionState?: AttentionState
 }
 
 export default function SecantLine({
@@ -26,12 +30,16 @@ export default function SecantLine({
   lineWidth = 2,
   pointSize = 0.06,
   extension = 2.5,
+  attentionState = "normal",
 }: SecantLineProps) {
   const [currentStartX, setCurrentStartX] = useState(startX)
   const [currentEndX, setCurrentEndX] = useState(endX)
   const progressRef = useRef(1)
   const fromStartXRef = useRef(startX)
   const fromEndXRef = useRef(endX)
+  const [visibleCount, setVisibleCount] = useState(2)
+  const [drawFinished, setDrawFinished] = useState(false)
+  const hasDrawnInRef = useRef(false)
 
   useEffect(() => {
     const startChanged = startX !== currentStartX
@@ -42,16 +50,6 @@ export default function SecantLine({
       progressRef.current = 0
     }
   }, [startX, endX])
-
-  useFrame((_, delta) => {
-    if (progressRef.current >= 1) return
-    const t = Math.min(progressRef.current + delta / MORPH_DURATION, 1)
-    progressRef.current = t
-    const fromStart = fromStartXRef.current
-    const fromEnd = fromEndXRef.current
-    setCurrentStartX(fromStart + (startX - fromStart) * t)
-    setCurrentEndX(fromEnd + (endX - fromEnd) * t)
-  })
 
   const x1 = currentStartX
   const x2 = currentEndX
@@ -73,14 +71,53 @@ export default function SecantLine({
   const leftY = y1 + slope * (leftX - x1)
   const rightY = y1 + slope * (rightX - x1)
 
-  const linePoints: [THREE.Vector3, THREE.Vector3] = [
-    new THREE.Vector3(leftX, leftY, 0),
-    new THREE.Vector3(rightX, rightY, 0),
-  ]
+  const linePoints = useMemo(() => {
+    const pts: THREE.Vector3[] = []
+    for (let i = 0; i <= DRAW_STEPS; i++) {
+      const t = i / DRAW_STEPS
+      const x = leftX + t * (rightX - leftX)
+      const y = leftY + t * (rightY - leftY)
+      pts.push(new THREE.Vector3(x, y, 0))
+    }
+    return pts
+  }, [leftX, rightX, leftY, rightY])
+
+  const visiblePoints = useMemo(
+    () => linePoints.slice(0, Math.floor(visibleCount)),
+    [linePoints, visibleCount]
+  )
+
+  useFrame((_, delta) => {
+    // draw-in: left to right on first appearance (same as FunctionPlot)
+    if (!drawFinished && hasDrawnInRef.current) {
+      setVisibleCount(prev => {
+        const speed = (DRAW_STEPS + 1) / DRAW_DURATION
+        const next = prev + speed * delta
+        if (next >= DRAW_STEPS + 1) setDrawFinished(true)
+        return Math.min(next, DRAW_STEPS + 1)
+      })
+    }
+
+    // morph when startX/endX change (sliding)
+    if (progressRef.current < 1) {
+      const t = Math.min(progressRef.current + delta / MORPH_DURATION, 1)
+      progressRef.current = t
+      const fromStart = fromStartXRef.current
+      const fromEnd = fromEndXRef.current
+      setCurrentStartX(fromStart + (startX - fromStart) * t)
+      setCurrentEndX(fromEnd + (endX - fromEnd) * t)
+      return
+    }
+
+    // morph done + not yet drawn in -> start draw-in
+    if (!hasDrawnInRef.current) {
+      hasDrawnInRef.current = true
+    }
+  })
 
   return (
     <group>
-      <Line points={linePoints} color={color} lineWidth={lineWidth} />
+      <Line points={visiblePoints} color={color} lineWidth={lineWidth} />
       <mesh position={[x1, y1, 0]}>
         <sphereGeometry args={[pointSize, 16, 16]} />
         <meshStandardMaterial color={color} />

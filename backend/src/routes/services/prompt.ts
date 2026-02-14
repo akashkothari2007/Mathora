@@ -119,12 +119,14 @@ SUBTITLE (the main teaching content — 3–5 sentences the user will hear)
 
 VISUAL GOAL (simple, short — what to draw this step only)
 - Plain words: "add nothing", "add a simple function", "add a line", "add a secant", "update the secant", "add a point", "draw a triangle" (with lines), "shade the area", "label the graph" etc.
-- One step = one (or two) clear actions. Spread visuals across steps so the lesson builds.
+- Make sure it is specific and complete with ids for each object (p1, p2 for two points etc) with no reusing ids absolutely at all
+- e.g. p1 at 1, 2, and p2 at 3, 4, and l1 connecting them could be a visual goal for one step
+- Spread visuals across steps so the lesson builds.
 - First step often: "Add nothing." so we don't dump the graph before the intro.
 - Match the subtitle: when you say "here's the curve", that step's goal is "add the function". When you say "draw the line between two points", that step's goal is "add a secant line" or "add a line".
 - Make sure you finish the lesson with the whole goal visually to not leave the user hanging it should be complete, accurate and make sense to users who are unfamiliar with the topic
 - for example if explaining average rate of change, show with labels the rise and run and divide to show the average rate of change, complete the lesson with the example and numbers
-
+- You are a math teacher and you are building a specific lesson plan with specific, complete and smooth visuals to help the user learn
 
 ---
 
