@@ -85,6 +85,7 @@ RULES:
 - Function f: use a string the frontend can eval: "x*x", "Math.sin(x)", "2*x+1".
 - Use 3.14159265359 for pi if needed.
 - LABEL EVERY SINGLE GRAPH USING THE LABEL
+- label whatever is necessary to make it further understandable for the user
 OUTPUT: Only valid JSON, no markdown or backticks. Do not include subtitle.
 {
   "actions": [...],
