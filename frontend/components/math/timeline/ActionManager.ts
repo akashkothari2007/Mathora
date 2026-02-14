@@ -13,14 +13,14 @@ export function applyAttention({
     updatedIds = [],
 }: ApplyAttentionArgs): GraphObject[] {
     const highlightState = "highlighted"
-    const normalState = "normal"
+    const dimmedState = "dimmed"
 
     const focus = new Set<string>([...addedIds, ...updatedIds]);
     return objects.map((obj) => ({
         ...obj,
         props: {
           ...obj.props,
-          attentionState: focus.has(obj.id) ? highlightState : normalState,
+          attentionState: focus.has(obj.id) ? highlightState : dimmedState,
         },
       })) as GraphObject[];
 }

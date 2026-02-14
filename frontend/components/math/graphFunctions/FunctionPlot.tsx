@@ -121,30 +121,36 @@ export default function FunctionPlot({
     // DIM: darken color + thinner
     // HIGHLIGHT: brighten to white-ish + thicker
     if (lineRef.current) {
-      const dimT = attn.dim.current         // 0..1
-      const hiT = attn.emphasis.current     // 0..1
-
-      const dimFactor = 1 - 0.75 * dimT     // goes to 0.25
-      const dimmedColor = darken(color, dimFactor)
-
-      // Blend toward white when highlighted
-      const base = new THREE.Color(dimmedColor)
-      const white = new THREE.Color('#ffffff')
-      base.lerp(white, 0.9 * hiT)
+      const dimT = attn.dim.current     // 0..1
+      const hiT = attn.emphasis.current // 0..1
+    
+      // color: dim = darker version of original color, highlight = SAME hue (optionally slightly brighter)
+      const base = new THREE.Color(color)
+    
+      // dim: scale brightness down
+      const dimFactor = 1 - 0.75 * dimT // to 0.25
+      base.multiplyScalar(dimFactor)
+    
+      // optional: a small brighten on highlight, but keep hue (NO lerp to white)
+      const brightenFactor = 1 + 0.25 * hiT // up to +25%
+      base.multiplyScalar(brightenFactor)
+      base.r = Math.min(1, Math.max(0, base.r))
+      base.g = Math.min(1, Math.max(0, base.g))
+      base.b = Math.min(1, Math.max(0, base.b))
+    
       const finalColor = `#${base.getHexString()}`
-
-      // width: dim -> a bit smaller, highlight -> bigger
+    
+      // width: dim -> slightly thinner, highlight -> thicker
       const finalWidth =
         lineWidth * (1 - 0.25 * dimT) * (1 + 1.2 * hiT)
-
-      // apply
-      lineRef.current.material.color = new THREE.Color(finalColor)
+    
+      // apply color
+      lineRef.current.material.color.set(finalColor)
       lineRef.current.material.needsUpdate = true
-
-      // drei Line uses a custom material; lineWidth is usually a prop,
-      // but we can force it via the object too (works for Line2).
+    
+      // apply width if supported
       if ('linewidth' in lineRef.current.material) {
-        lineRef.current.material.linewidth = finalWidth
+        ;(lineRef.current.material as any).linewidth = finalWidth
       }
     }
 
