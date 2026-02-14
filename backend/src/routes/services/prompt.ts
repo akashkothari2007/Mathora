@@ -31,7 +31,7 @@ Your job: output only the graph actions (and optional cameraTarget) that fulfill
 CURRENT GRAPH: ${JSON.stringify(objects ?? {})}
 
 ACTIONS YOU CAN USE:
-- add: put a new object on the graph (use new IDs: f1, pt1, tan1, area1, sec1, ln1, lbl1), no reusing ids
+- add: put a new object on the graph (use new IDs: f1, pt1, tan1, area1, sec1, ln1, lbl1), no reusing ids for any two objects
 - update: change props of an existing object by id (e.g. move a point, change secant endpoints).
 - remove: remove an object by id (e.g. when moving to a new concept).
 
@@ -123,6 +123,8 @@ VISUAL GOAL (simple, short — what to draw this step only)
 - First step often: "Add nothing." so we don't dump the graph before the intro.
 - Match the subtitle: when you say "here's the curve", that step's goal is "add the function". When you say "draw the line between two points", that step's goal is "add a secant line" or "add a line".
 - Make sure you finish the lesson with the whole goal visually to not leave the user hanging it should be complete, accurate and make sense to users who are unfamiliar with the topic
+- for example if explaining average rate of change, show with labels the rise and run and divide to show the average rate of change, complete the lesson with the example and numbers
+
 
 ---
 
