@@ -8,6 +8,7 @@ import {
   cameraTimeline,
   lineTimeline,
   secantLineTimeline,
+  label2DTestTimeline,
 } from "../math/timeline/coreFunctionTests";
 import type { Step } from "../math/types/steps";
 
@@ -20,5 +21,6 @@ export function resolveTestTimeline(prompt: string): Step[] | null {
   if (prompt === "camera test") return cameraTimeline;
   if (prompt === "line test") return lineTimeline;
   if (prompt === "secant test") return secantLineTimeline;
+  if (prompt === "type test") return label2DTestTimeline;
   return null;
 }
