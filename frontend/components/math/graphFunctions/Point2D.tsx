@@ -3,6 +3,7 @@
 import * as THREE from 'three'
 import { useFrame } from '@react-three/fiber'
 import { useRef, useState, useEffect } from 'react'
+import { AttentionState } from '../types/attentionStates'
 
 export type Point2DProps = {
   position: { x: number; y: number }
@@ -18,6 +19,7 @@ export type Point2DProps = {
     endX: number
     duration?: number
   }
+  attentionState?: AttentionState
 }
 
 export default function Point2D({

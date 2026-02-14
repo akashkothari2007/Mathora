@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react'
 import { Line } from '@react-three/drei'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
+import { AttentionState } from '../types/attentionStates'
 
 export type SlidingTangentProps = {
   f: (x: number) => number
@@ -14,6 +15,7 @@ export type SlidingTangentProps = {
   xmax?: number
   color?: string
   lineWidth?: number
+  attentionState?: AttentionState
 }
 
 export default function SlidingTangent({

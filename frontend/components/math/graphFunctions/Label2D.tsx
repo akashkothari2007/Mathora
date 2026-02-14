@@ -47,12 +47,14 @@ import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { Billboard } from '@react-three/drei'
 import opentype, { Font } from 'opentype.js'
+import { AttentionState } from '../types/attentionStates'
 
 export type Label2DProps = {
     text: string
     position: { x: number, y: number }
     color?: string
     fontSize?: number
+    attentionState?: AttentionState
 }
 
 const LAG_RATIO = 0.055

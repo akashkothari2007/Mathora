@@ -4,6 +4,7 @@ import { Line } from '@react-three/drei'
 import { useState, useRef, useEffect } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
+import { AttentionState } from '../types/attentionStates'
 
 const MORPH_DURATION = 0.3
 
@@ -12,6 +13,7 @@ export type Line2DProps = {
   end: { x: number; y: number }
   color?: string
   lineWidth?: number
+  attentionState?: AttentionState
 }
 
 export default function Line2D({

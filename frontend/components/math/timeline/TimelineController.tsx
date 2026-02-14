@@ -5,6 +5,7 @@ import { Step } from '../types/steps'
 import { GraphObject } from '../types/graphObject'
 import { CameraTarget } from '../types/cameraTarget'
 import { handleSubtitle } from './handleSubtitle'
+import { applyAttention } from './ActionManager'
 
 type UseTimelineControllerProps = {
   steps: Step[]
@@ -74,10 +75,13 @@ export function useTimelineController({
     else setCameraTarget(null)
 
     // apply every action in this step immediately (same "tick")
+    const addedIds: string[] = [];
+    const updatedIds: string[] = [];
     for (const action of step.actions ?? []) {
       switch (action.type) {
         case 'add':
           setGraphObjects(prev => [...prev, action.object])
+          addedIds.push(action.object.id)
           break
 
         case 'remove':
@@ -91,10 +95,20 @@ export function useTimelineController({
                 : obj
             )
           )
+          updatedIds.push(action.id)
           break
       }
     }
+    setGraphObjects((prev) =>
+      applyAttention({
+        objects: prev,
+        addedIds,
+        updatedIds,
+      })
+    );
   }, [stepIndex, steps, setGraphObjects, setSubtitle, setCameraTarget])
+
+  
   // cleanup audio when component unmounts
   useEffect(() => {
     return () => {

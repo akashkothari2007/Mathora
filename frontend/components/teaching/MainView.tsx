@@ -50,7 +50,6 @@ export default function MainView({
         
         // use timeline controller to handle the timeline
         useTimelineController({steps, setGraphObjects, setSubtitle, setCameraTarget, stepIndex, setStepIndex, executed, setWhiteboardLines})
-
         const panels = [
         showGraph && <GraphPanel key = "graph" graphObjects={graphObjects} cameraTarget={cameraTarget} />,
         showWhiteboard && <WhiteboardPanel key = "whiteboard" whiteboardLines={whiteboardLines} />,

@@ -4,6 +4,7 @@ import { useMemo, useEffect, useRef, useState } from 'react'
 import * as THREE from 'three'
 import { Line } from '@react-three/drei'
 import { useFrame } from '@react-three/fiber'
+import { AttentionState } from '../types/attentionStates'
 
 export type FunctionPlotProps = {
   f: (x: number) => number
@@ -12,6 +13,7 @@ export type FunctionPlotProps = {
   steps?: number
   color?: string
   lineWidth?: number
+  attentionState?: AttentionState
 }
 
 const MORPH_DURATION = 0.4

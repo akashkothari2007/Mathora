@@ -2,6 +2,7 @@
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { useMemo, useRef, useEffect } from 'react'
+import { AttentionState } from '../types/attentionStates'
 
 export type ShadeAreaProps = {
   f: (x:number)=>number
@@ -18,6 +19,7 @@ export type ShadeAreaProps = {
     xmax?: number
   }
   animateDuration?: number
+  attentionState?: AttentionState
 }
 
 export default function ShadeArea({
