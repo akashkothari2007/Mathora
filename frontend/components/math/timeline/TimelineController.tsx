@@ -99,6 +99,8 @@ export function useTimelineController({
           break
       }
     }
+    
+    /*
     setGraphObjects((prev) =>
       applyAttention({
         objects: prev,
@@ -106,6 +108,7 @@ export function useTimelineController({
         updatedIds,
       })
     );
+    */
   }, [stepIndex, steps, setGraphObjects, setSubtitle, setCameraTarget])
 
   
