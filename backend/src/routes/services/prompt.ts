@@ -79,12 +79,12 @@ cameraTarget (optional) — frame the view. Use when you want to zoom or focus o
 Give only what matters: e.g. just height to zoom vertically, or just width. If you give both, we fit both (camera backs up so both are visible). Omit entirely for default view.
   {"cameraTarget":{"center":[0,0,0],"width":8}}
   {"cameraTarget":{"center":[1,1,0],"height":3}}
-make sure to label graphs
+
 RULES:
 - All numbers bare: {"x":1,"y":1} not {"x":"1","y":"1"}.
 - Function f: use a string the frontend can eval: "x*x", "Math.sin(x)", "2*x+1".
 - Use 3.14159265359 for pi if needed.
-
+- LABEL EVERY SINGLE GRAPH USING THE LABEL
 OUTPUT: Only valid JSON, no markdown or backticks. Do not include subtitle.
 {
   "actions": [...],
@@ -117,7 +117,7 @@ SUBTITLE (the main teaching content — 3–5 sentences the user will hear)
 ---
 
 VISUAL GOAL (simple, short — what to draw this step only)
-- Plain words: "add nothing", "add a simple function", "add a line", "add a secant", "update the secant", "add a point", "draw a triangle" (with lines), "shade the area", etc.
+- Plain words: "add nothing", "add a simple function", "add a line", "add a secant", "update the secant", "add a point", "draw a triangle" (with lines), "shade the area", "label the graph" etc.
 - One step = one (or two) clear actions. Spread visuals across steps so the lesson builds.
 - First step often: "Add nothing." so we don't dump the graph before the intro.
 - Match the subtitle: when you say "here's the curve", that step's goal is "add the function". When you say "draw the line between two points", that step's goal is "add a secant line" or "add a line".
@@ -138,7 +138,6 @@ Example for "Explain the derivative":
   { "subtitle": "The slope of that tangent line is the derivative at that point. So the derivative is the instantaneous rate of change: how fast things are changing right at that moment.", "visualGoal": "Add a point at the spot where the tangent touches, or leave as is." }
 ]
 4-7 steps is fine may vary
-MAKE SURE TO LABEL GRAPHS
 
 Question:
 ${JSON.stringify(userQuestion)}
