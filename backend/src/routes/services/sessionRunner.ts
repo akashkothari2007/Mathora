@@ -8,6 +8,7 @@ import {
     broadcastDone,
     broadcastError,
     deleteSession,
+    normalizeStepIds,
   } from "./sessionStore";
 
 
@@ -53,9 +54,9 @@ export async function startSessionRunner(sessionId: string) {
           s.objects,
           s.whiteboardLines
         );
-  
-        broadcastStep(sessionId, step);
-        commitStep(sessionId, step);
+        const normalizedStep = normalizeStepIds(s, step);
+        broadcastStep(sessionId, normalizedStep);
+        commitStep(sessionId, normalizedStep);
       }
     } catch (e: any) {
       console.error(`[Backend] [Runner] Error in session ${sessionId}:`, e?.message || e);

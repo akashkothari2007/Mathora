@@ -91,7 +91,8 @@
   },
   "scripts": {
     "start": "npx ts-node-dev --respawn --transpile-only src/index.ts",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "normalize_test": "npx tsx scripts/test-normalize-ids.ts"
   },
   "keywords": [],
   "author": "",

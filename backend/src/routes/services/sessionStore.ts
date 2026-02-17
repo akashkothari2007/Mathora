@@ -209,3 +209,47 @@ export function update_object_state(session: Session, step: Step){
     }
   }
 }
+
+/** Rename duplicate or already-existing ids in step so frontend and commit see unique ids. */
+export function normalizeStepIds(session: Session, step: Step): Step {
+  if (!step.actions?.length) return step;
+
+  // session.objects is { f1: {...}, pt1: {...} } — we need "which ids already exist?"
+  const existingIds = new Set(Object.keys(session.objects));
+
+  // when we rename an id, later "update" or "remove" in this step might still use the old id — track renames
+  const renames: Record<string, string> = {};
+
+  const actions = step.actions.map((action) => {
+    if (action.type === "add" && action.object) {
+      let id = action.object.id;
+      // id already in session OR we already used it in an earlier "add" in this step → need new id
+      let n = 0;
+      let newId = id;
+      while (existingIds.has(newId)) {
+        n++;
+        newId = id + "-" + n;
+      }
+      id = newId;
+      if (id !== action.object.id) {
+        renames[action.object.id] = id;
+        console.log(`[Backend] [SessionStore] Normalized add id ${action.object.id} → ${id}`);
+      }
+      existingIds.add(id);
+      return { ...action, object: { ...action.object, id } };
+    }
+    if (action.type === "update" && action.id) {
+      const id = renames[action.id] ?? action.id;
+      if (renames[action.id]) console.log(`[Backend] [SessionStore] Normalized update id ${action.id} → ${id}`);
+      return { ...action, id };
+    }
+    if (action.type === "remove" && action.id) {
+      const id = renames[action.id] ?? action.id;
+      if (renames[action.id]) console.log(`[Backend] [SessionStore] Normalized remove id ${action.id} → ${id}`);
+      return { ...action, id };
+    }
+    return action;
+  });
+
+  return { ...step, actions };
+}
