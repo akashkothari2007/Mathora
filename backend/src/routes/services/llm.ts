@@ -63,6 +63,7 @@ export async function generateStep(
     try {
       const prompt = buildPrompt(question, step_number, outline, previousStepJson, objects, whiteboardLines);
       const raw = await callAzureOpenAI(prompt);
+      console.log(raw);
       const cleaned = raw.trim().replace(/^```json\s*/i, "").replace(/^```\s*/i, "").replace(/\s*```$/, "");
       const parsed = StepGenerationResponseSchema.parse(JSON.parse(cleaned));
 

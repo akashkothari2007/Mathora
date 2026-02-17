@@ -155,7 +155,7 @@ export const ObjectSchema = z.discriminatedUnion("type", [
   }),
   z.object({
     id: CleanedString,
-    type: z.literal("Line2D"),
+    type: z.literal("line"),
     props: Line2DSchema,
   }),
 ]);
