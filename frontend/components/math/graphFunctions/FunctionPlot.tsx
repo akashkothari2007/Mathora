@@ -39,8 +39,8 @@ function darken(hex: string, factor: number) {
 
 export default function FunctionPlot({
   f,
-  xmin = -100,
-  xmax = 100,
+  xmin = -10,
+  xmax = 10,
   steps = 10000,
   color = '#ffffff',
   lineWidth = 1,
