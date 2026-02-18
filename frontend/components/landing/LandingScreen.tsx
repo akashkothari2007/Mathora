@@ -1,4 +1,5 @@
 import { useState } from 'react' //persistent memory for a component
+import { unlockAudio } from '../math/timeline/handleSubtitle'
 //react re renders the component when state changes and passes the new state to the component
 //so it remembers the value of the input
 
@@ -27,7 +28,7 @@ export default function LandingScreen({handleSubmit, error}: Props) {
                     className = "w-full px-5 py-3.5 text-base rounded-xl bg-neutral-900/50 border border-neutral-800/50 focus:outline-none focus:border-neutral-700 focus:bg-neutral-900 focus:ring-2 focus:ring-neutral-800/50 focus:ring-offset-2 focus:ring-offset-neutral-950 transition-all duration-200 text-neutral-200 placeholder:text-neutral-600"
                 />
                 <button
-                    onClick = {() => handleSubmit(input)} //anotha one event handler
+                    onClick = {() => { unlockAudio(); handleSubmit(input); }}
                     className = "px-8 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-medium transition-all duration-200 ease-in-out hover:shadow-[0_4px_12px_rgba(37,99,235,0.3)] hover:scale-[1.02] active:scale-[0.98]"
                     >
                     Start

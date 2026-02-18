@@ -190,8 +190,9 @@ export function useTimelineController({
       const actions = step.actions ?? [];
       
       if (actions.length === 0) {
-        // No actions, just set up auto-advance
-        setupAutoAdvance(audioTiming.estimatedDuration, step.pauseDuration, stepIndex + 1 < steps.length);
+        // No actions, just set up auto-advance (on first step steps.length may be 1 while rest stream in)
+        const hasNext = stepIndex + 1 < steps.length || steps.length === 1;
+        setupAutoAdvance(audioTiming.estimatedDuration, step.pauseDuration, hasNext);
         return;
       }
 
@@ -256,11 +257,11 @@ export function useTimelineController({
         actionTimersRef.current.push(timer);
       });
 
-      // Set up auto-advance based on audio duration
-      // Account for the last action delay
+      // Set up auto-advance based on audio duration (on first step steps.length may be 1 while rest stream in)
       const lastActionDelay = TIMING_CONFIG.BASE_DELAY + ((actions.length - 1) * TIMING_CONFIG.STAGGER_DELAY);
       const totalStepDuration = Math.max(audioTiming.estimatedDuration, lastActionDelay);
-      setupAutoAdvance(totalStepDuration, step.pauseDuration, stepIndex + 1 < steps.length);
+      const hasNext = stepIndex + 1 < steps.length || steps.length === 1;
+      setupAutoAdvance(totalStepDuration, step.pauseDuration, hasNext);
     }).catch((error) => {
       console.error('Error handling subtitle:', error);
       // Fallback: execute actions immediately if audio fails
