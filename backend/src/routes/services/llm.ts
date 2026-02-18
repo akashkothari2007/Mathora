@@ -14,6 +14,7 @@ const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
 const fallbackStep: Step = {
   subtitle: "Unable to generate this step.",
+  speakSubtitle: "Unable to generate this step.",
   actions: [] as Action[],
   whiteboardLines: ["\\text{Step generation failed}"]
 };
@@ -89,6 +90,7 @@ export async function generateStep(
 
       const step: Step = {
         subtitle: subtitleFromOutline ?? "",
+        speakSubtitle: parsed.speakSubtitle ?? subtitleFromOutline ?? "",
         actions: parsed.actions ?? [],
         cameraTarget: parsed.cameraTarget ?? undefined,
       };
@@ -102,6 +104,7 @@ export async function generateStep(
         return {
           ...fallbackStep,
           subtitle: subtitleFromOutline ?? fallbackStep.subtitle,
+          speakSubtitle: subtitleFromOutline ?? fallbackStep.speakSubtitle,
         };
       }
       if (e?.name === 'ZodError') {
@@ -126,6 +129,7 @@ export async function generateStep(
   return {
     ...fallbackStep,
     subtitle: subtitleFromOutline ?? fallbackStep.subtitle,
+    speakSubtitle: subtitleFromOutline ?? fallbackStep.speakSubtitle,
   };
 }
 

@@ -192,15 +192,17 @@ export const ActionSchema = z.object({
 
 export const StepSchema = z.object({
   subtitle: CleanedString.optional(),
+  speakSubtitle: CleanedString.optional(),
   cameraTarget: CameraTargetSchema.nullable().optional(),
   actions: z.array(ActionSchema).optional(),
   whiteboardLines: z.array(z.string()).optional(),
 });
 
-/** AI returns only actions + optional cameraTarget; we inject subtitle from outline. */
+/** AI returns actions + optional cameraTarget + optional speakSubtitle; we inject subtitle from outline. */
 export const StepGenerationResponseSchema = z.object({
   actions: z.array(ActionSchema).optional(),
   cameraTarget: CameraTargetSchema.nullable().optional(),
+  speakSubtitle: CleanedString.optional(),
 });
 
 export const TimelineSchema = z.array(StepSchema);

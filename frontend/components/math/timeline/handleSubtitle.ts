@@ -1,12 +1,14 @@
 type Props = {
     subtitle: string;
+    speakSubtitle: string;
     setSubtitle: (subtitle: string) => void;
     audioRef: React.RefObject<HTMLAudioElement | null>;
 }
 
-export async function handleSubtitle({ subtitle, setSubtitle, audioRef }: Props) {
+export async function handleSubtitle({ subtitle, speakSubtitle, setSubtitle, audioRef }: Props) {
     setSubtitle(subtitle);
-    if (!subtitle) return;
+    const textToSpeak = speakSubtitle || subtitle;
+    if (!textToSpeak) return;
     try {
 
         const res = await fetch("http://localhost:3001/audio/convert", {
@@ -14,10 +16,10 @@ export async function handleSubtitle({ subtitle, setSubtitle, audioRef }: Props)
             headers: {
                 "Content-Type": "application/json",
             },
-            body: JSON.stringify({ text: subtitle }),
+            body: JSON.stringify({ text: textToSpeak }),
         });
         if (!res.ok) {
-            speakSubtitle(subtitle);
+            speakWithBrowserTTS(textToSpeak);
             throw new Error("Failed to convert text to speech");
         }
         
@@ -27,17 +29,17 @@ export async function handleSubtitle({ subtitle, setSubtitle, audioRef }: Props)
         try {
             await audioRef.current.play();
         } catch (error) {
-            speakSubtitle(subtitle);
+            speakWithBrowserTTS(textToSpeak);
             console.error(error);
         }
         
     } catch (error) {
-        speakSubtitle(subtitle);
+        speakWithBrowserTTS(textToSpeak);
         console.error(error);
     }
 }
 
-export function speakSubtitle(text: string) {
+export function speakWithBrowserTTS(text: string) {
   if (!text) return;
   const u = new SpeechSynthesisUtterance(text);
   u.rate = 1.0;

@@ -28,8 +28,10 @@ router.post("/start", async (req, res) => {
     const outline = await generateOutline(prompt);
     console.log(`[Backend] [${requestId}] Outline generated (${outline.length} steps)`);
     if (outline.length === 1 && outline[0].subtitle?.startsWith("Error:")) {
+      const errorSubtitle = outline[0].subtitle.replace(/^Error:\s*/i, "") || "I can only help with math questions. Try asking about calculus, algebra, or geometry!";
       const errorStep = {
-        subtitle: outline[0].subtitle.replace(/^Error:\s*/i, "") || "I can only help with math questions. Try asking about calculus, algebra, or geometry!",
+        subtitle: errorSubtitle,
+        speakSubtitle: errorSubtitle,
         actions: [],
       };
       const session = createSession({

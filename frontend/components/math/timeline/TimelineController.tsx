@@ -67,8 +67,13 @@ export function useTimelineController({
     const step = steps[stepIndex]
     console.log('Executing step', stepIndex, step)
 
-    // subtitle + camera are step-level now
-    handleSubtitle({ subtitle: step.subtitle ?? '', setSubtitle , audioRef})
+    // subtitle + camera are step-level now; use speakSubtitle for TTS (spoken form), fallback to subtitle
+    handleSubtitle({
+      subtitle: step.subtitle ?? '',
+      speakSubtitle: step.speakSubtitle ?? step.subtitle ?? '',
+      setSubtitle,
+      audioRef,
+    })
     setWhiteboardLines(prev => [...prev, ...(step.whiteboardLines ?? [])])
 
     if (step.cameraTarget) setCameraTarget(step.cameraTarget)

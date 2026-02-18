@@ -26,7 +26,7 @@ THIS STEP'S VISUAL GOAL (exactly what to do on the graph this step — match thi
 ${stepVisualGoal}
 """
 
-Your job: output only the graph actions (and optional cameraTarget) that fulfill the visual goal above. Do NOT generate a subtitle. Do only what this step asks: e.g. if the goal says "add nothing", return empty actions; if it says "add the function", add the function; if it says "update the secant", update the existing secant. Build on objects from previous steps; do not re-add what is already there unless the goal says to replace it.
+Your job: (1) Output the graph actions (and optional cameraTarget) that fulfill the visual goal above. (2) Output speakSubtitle: the spoken version of THIS STEP'S NARRATION above — same content but in words you would say aloud for text-to-speech. Convert any math notation to spoken form (e.g. x^2 → "x squared", 9-(x+2)² → "9 minus the quantity x plus 2, squared"; use "quantity" for grouping so it's unambiguous when heard). If the narration has no math notation, speakSubtitle can equal it. Do NOT generate a new subtitle; use the narration given. Do only what this step asks: e.g. if the goal says "add nothing", return empty actions; if it says "add the function", add the function; if it says "update the secant", update the existing secant. Build on objects from previous steps; do not re-add what is already there unless the goal says to replace it.
 
 CURRENT GRAPH: ${JSON.stringify(objects ?? {})}
 
@@ -43,7 +43,7 @@ GUIDELINES:
 OBJECT TYPES AND PROPS (numbers must be bare, not strings):
 
 function — graph y = f(x). Optional: xmin, xmax (default -5..5), color, lineWidth.
-  add: {"type":"add","object":{"id":"f1","type":"function","props":{"f":"x*x","xmin":-3,"xmax":3,"color":"#4ade80"}}}
+  add: {"type":"add","object":{"id":"f1","type":"function","props":{"f":"x*x","color":"#4ade80"}}}
 
 point — dot at (x,y). Optional: color, size. Can animate or follow a function.
   add: {"type":"add","object":{"id":"pt1","type":"point","props":{"position":{"x":1,"y":1},"color":"red"}}}
@@ -86,10 +86,11 @@ RULES:
 - Use 3.14159265359 for pi if needed.
 - LABEL EVERY SINGLE GRAPH USING THE LABEL
 - label whatever is necessary to make it further understandable for the user
-OUTPUT: Only valid JSON, no markdown or backticks. Do not include subtitle.
+OUTPUT: Only valid JSON, no markdown or backticks. Include speakSubtitle (spoken version of the step narration above).
 {
   "actions": [...],
-  "cameraTarget": { ... } or omit
+  "cameraTarget": { ... } or omit,
+  "speakSubtitle": "string — same as narration but in spoken words, math notation converted"
 }
 
 Context:
@@ -109,7 +110,7 @@ Return ONLY valid JSON:
 
 ---
 
-SUBTITLE (the main teaching content — 3–5 sentences the user will hear)
+SUBTITLE (the main teaching content — 3–5 sentences the user will see and read)
 - Style: like 3Blue1Brown. Explain WHY before formulas. Build from basics; assume no prior knowledge.
 - Use analogies and "what if we..." so it feels like a conversation. One main idea per step.
 - Natural, friendly tone. Make the intuition crystal clear; then the math follows.
