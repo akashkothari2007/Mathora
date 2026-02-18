@@ -28,25 +28,44 @@ type DeepSeekResponse = {
 
 
 export async function generateOutline(question: string): Promise<OutlineStep[]> {
-  const prompt = buildOutlinePrompt(question);
+  try{
+    const prompt = buildOutlinePrompt(question);
 
-  const raw = await callAzureOpenAI(prompt);
+    const raw = await callAzureOpenAI(prompt);
 
-  const cleaned = raw
-    .trim()
-    .replace(/^```json\s*/i, "")
-    .replace(/^```\s*/i, "")
-    .replace(/\s*```$/, "");
+    const cleaned = raw
+      .trim()
+      .replace(/^```json\s*/i, "")
+      .replace(/^```\s*/i, "")
+      .replace(/\s*```$/, "");
 
-  const parsed = JSON.parse(cleaned);
+    const parsed = JSON.parse(cleaned);
 
-  if (!Array.isArray(parsed.outline)) {
-    throw new Error("Generated outline is not an array");
+    if (!Array.isArray(parsed.outline)) {
+      throw new Error("Generated outline is not an array");
+    }
+    const outline = OutlineSchema.parse(parsed.outline);
+    console.log(outline);
+    return outline;
+  } catch (e: any) {
+    console.error(`[Backend] [LLM] ═══ OUTLINE GENERATION FAILED ═══`);
+    console.error(`[Backend] [LLM] Question: "${question}"`);
+      if (e?.name === 'ZodError') {
+      console.error(`[Backend] [LLM] ERROR TYPE: Outline Schema Validation Failed`);
+      console.error(`[Backend] [LLM] Zod Errors:`, JSON.stringify(e.errors, null, 2));
+    } else if (e?.message?.includes('JSON')) {
+      console.error(`[Backend] [LLM] ERROR TYPE: JSON Parse Failed`);
+      console.error(`[Backend] [LLM] Parse Error:`, e.message);
+    } else {
+      console.error(`[Backend] [LLM] ERROR TYPE:`, e.message);
+    }
+    throw e;
   }
-  const outline = OutlineSchema.parse(parsed.outline);
-  console.log(outline);
-  return outline;
 }
+
+
+
+
 
 export async function generateStep(
   question: string,
@@ -60,11 +79,12 @@ export async function generateStep(
   const subtitleFromOutline = outline[step_number]?.subtitle ?? "";
 
   for (let attempt = 1; attempt <= max_attempts; attempt++) {
+    let cleaned = "";
     try {
       const prompt = buildPrompt(question, step_number, outline, previousStepJson, objects, whiteboardLines);
       const raw = await callAzureOpenAI(prompt);
       console.log(raw);
-      const cleaned = raw.trim().replace(/^```json\s*/i, "").replace(/^```\s*/i, "").replace(/\s*```$/, "");
+      cleaned = raw.trim().replace(/^```json\s*/i, "").replace(/^```\s*/i, "").replace(/\s*```$/, "");
       const parsed = StepGenerationResponseSchema.parse(JSON.parse(cleaned));
 
       const step: Step = {
@@ -77,11 +97,29 @@ export async function generateStep(
     } catch (e: any) {
       if (attempt === max_attempts) {
         console.error(`[Backend] [LLM] Failed after ${max_attempts} attempts:`, e?.message || e);
+        console.error(`[Backend] [LLM] Question: "${question}"`);
+        console.error(`[Backend] [LLM] Step: ${step_number + 1}/${outline.length}`);
         return {
           ...fallbackStep,
           subtitle: subtitleFromOutline ?? fallbackStep.subtitle,
         };
       }
+      if (e?.name === 'ZodError') {
+      console.error(`[Backend] [LLM] ERROR TYPE: Schema Validation Failed`);
+      console.error(`[Backend] [LLM] Zod Errors:`, JSON.stringify(e.errors, null, 2));
+      console.error(`[Backend] [LLM] Step: ${step_number + 1}/${outline.length}`);
+    } else if (e?.message?.includes('JSON')) {
+      console.error(`[Backend] [LLM] ERROR TYPE: JSON Parse Failed`);
+      console.error(`[Backend] [LLM] Parse Error:`, e.message);
+      console.error(`[Backend] [LLM] Step: ${step_number + 1}/${outline.length}`);
+    } else {
+      console.error(`[Backend] [LLM] ERROR TYPE: Unknown`);
+      console.error(`[Backend] [LLM] Error:`, e?.message || e);
+      console.error(`[Backend] [LLM] Step: ${step_number + 1}/${outline.length}`);
+    }
+    console.error(`[Backend] [LLM] Raw AI Response (first 1500 chars):`);
+    console.error(cleaned.substring(0, 1500));
+    console.error(`[Backend] [LLM] ════════════════════════════════`);
     }
   }
 
