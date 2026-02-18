@@ -106,7 +106,7 @@ export function buildOutlinePrompt(userQuestion: string) {
 You are writing a short lesson outline. The outline is what brings everything together: cohesive story, great explanations, and clear instructions for what to draw each step.
 
 Return ONLY valid JSON:
-{ "outline": [ { "subtitle": string, "visualGoal": string }, ... ] }
+{ "outline": [ { "subtitle": string, "visualGoal": string, "pauseDuration": "short" | "medium" | "long" }, ... ] }
 
 ---
 
@@ -147,6 +147,16 @@ VISUAL GOAL (simple, short — what to draw this step only)
 
 ---
 
+PAUSE DURATION (optional — how long to pause after this step before auto-advancing)
+- "short": 0.5 seconds — quick transitions, simple concepts
+- "medium": 1 second — default, most steps use this
+- "long": 1.5 seconds — complex concepts, let user process
+- Use "long" for steps with important insights or multiple visuals
+- Use "short" for quick setup steps or transitions
+- Omit for default "medium" behavior
+
+---
+
 IF the user asks anything that is NOT a math question (slurs, politics, history, personal advice, etc.):
 - Return: { "outline": [ { "subtitle": "Error: I can only help with math questions.", "visualGoal": "none" } ] }
 
@@ -154,10 +164,10 @@ IF the user asks anything that is NOT a math question (slurs, politics, history,
 
 Example for "Explain the derivative":
 [
-  { "subtitle": "What if we could measure how steep a curve is at a single point? That's exactly what the derivative does. Think of driving a car: your speedometer shows how fast you're going right now — that's the derivative of your position.", "visualGoal": "Add nothing." },
-  { "subtitle": "Here's a trick. Take two points on the curve and draw the line between them. That line is called a secant. Its slope is the average rate of change between those two points — like your average speed over a stretch of road.", "visualGoal": "Add a simple function like x squared. Add a secant line between two x values." },
-  { "subtitle": "Now imagine moving the second point closer and closer to the first. The secant line rotates and approaches a limiting line — the tangent. That tangent just kisses the curve at one point.", "visualGoal": "Update the secant so the two points are closer together, near x=1." },
-  { "subtitle": "The slope of that tangent line is the derivative at that point. So the derivative is the instantaneous rate of change: how fast things are changing right at that moment.", "visualGoal": "Add a point at the spot where the tangent touches, or leave as is." }
+  { "subtitle": "What if we could measure how steep a curve is at a single point? That's exactly what the derivative does. Think of driving a car: your speedometer shows how fast you're going right now — that's the derivative of your position.", "visualGoal": "Add nothing.", "pauseDuration": "medium" },
+  { "subtitle": "Here's a trick. Take two points on the curve and draw the line between them. That line is called a secant. Its slope is the average rate of change between those two points — like your average speed over a stretch of road.", "visualGoal": "Add a simple function like x squared. Add a secant line between two x values.", "pauseDuration": "medium" },
+  { "subtitle": "Now imagine moving the second point closer and closer to the first. The secant line rotates and approaches a limiting line — the tangent. That tangent just kisses the curve at one point.", "visualGoal": "Update the secant so the two points are closer together, near x=1.", "pauseDuration": "long" },
+  { "subtitle": "The slope of that tangent line is the derivative at that point. So the derivative is the instantaneous rate of change: how fast things are changing right at that moment.", "visualGoal": "Add a point at the spot where the tangent touches, or leave as is.", "pauseDuration": "medium" }
 ]
 4-7 steps is fine may vary
 

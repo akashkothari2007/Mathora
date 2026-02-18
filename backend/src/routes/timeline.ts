@@ -32,6 +32,7 @@ router.post("/start", async (req, res) => {
       const errorStep = {
         subtitle: errorSubtitle,
         speakSubtitle: errorSubtitle,
+        pauseDuration: "medium" as const,
         actions: [],
       };
       const session = createSession({

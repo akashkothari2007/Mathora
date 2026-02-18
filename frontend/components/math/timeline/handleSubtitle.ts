@@ -5,12 +5,29 @@ type Props = {
     audioRef: React.RefObject<HTMLAudioElement | null>;
 }
 
-export async function handleSubtitle({ subtitle, speakSubtitle, setSubtitle, audioRef }: Props) {
+const WORDS_PER_MINUTE = 150;
+const CHARS_PER_WORD = 5;
+const AUDIO_START_TIMEOUT = 300;
+
+export type AudioTimingResult = {
+    audioStarted: boolean;
+    estimatedDuration: number; // milliseconds
+}
+
+function estimateTTSDuration(text: string): number {
+    const wordCount = text.length / CHARS_PER_WORD;
+    const minutes = wordCount / WORDS_PER_MINUTE;
+    return Math.ceil(minutes * 60 * 1000); // Convert to milliseconds
+}
+
+export async function handleSubtitle({ subtitle, speakSubtitle, setSubtitle, audioRef }: Props): Promise<AudioTimingResult> {
     setSubtitle(subtitle);
     const textToSpeak = speakSubtitle || subtitle;
-    if (!textToSpeak) return;
+    if (!textToSpeak) {
+        return { audioStarted: false, estimatedDuration: 0 };
+    }
+    
     try {
-
         const res = await fetch("http://localhost:3001/audio/convert", {
             method: "POST",
             headers: {
@@ -18,24 +35,77 @@ export async function handleSubtitle({ subtitle, speakSubtitle, setSubtitle, aud
             },
             body: JSON.stringify({ text: textToSpeak }),
         });
+        
         if (!res.ok) {
             speakWithBrowserTTS(textToSpeak);
-            throw new Error("Failed to convert text to speech");
+            return {
+                audioStarted: true,
+                estimatedDuration: estimateTTSDuration(textToSpeak)
+            };
         }
         
         const blob = await res.blob();
         const url = URL.createObjectURL(blob);
-        audioRef.current = new Audio(url);
-        try {
-            await audioRef.current.play();
-        } catch (error) {
+        const audio = new Audio(url);
+        audioRef.current = audio;
+        
+        // Wait for metadata to load to get duration
+        const durationPromise = new Promise<number>((resolve) => {
+            const onLoadedMetadata = () => {
+                audio.removeEventListener('loadedmetadata', onLoadedMetadata);
+                const duration = audio.duration;
+                if (duration && isFinite(duration)) {
+                    resolve(duration * 1000); // Convert to milliseconds
+                } else {
+                    resolve(estimateTTSDuration(textToSpeak));
+                }
+            };
+            
+            if (audio.readyState >= 1) {
+                // Metadata already loaded
+                const duration = audio.duration;
+                if (duration && isFinite(duration)) {
+                    resolve(duration * 1000);
+                } else {
+                    resolve(estimateTTSDuration(textToSpeak));
+                }
+            } else {
+                audio.addEventListener('loadedmetadata', onLoadedMetadata);
+                // Fallback timeout
+                setTimeout(() => {
+                    audio.removeEventListener('loadedmetadata', onLoadedMetadata);
+                    resolve(estimateTTSDuration(textToSpeak));
+                }, 1000);
+            }
+        });
+        
+        // Wait for audio to start playing
+        const playPromise = audio.play().catch((error) => {
+            console.error('Audio play failed:', error);
             speakWithBrowserTTS(textToSpeak);
-            console.error(error);
-        }
+            return Promise.resolve();
+        });
+        
+        // Wait for play to start (or timeout)
+        const startTimeout = new Promise<void>((resolve) => {
+            setTimeout(() => resolve(), AUDIO_START_TIMEOUT);
+        });
+        
+        await Promise.race([playPromise, startTimeout]);
+        
+        const duration = await durationPromise;
+        
+        return {
+            audioStarted: true,
+            estimatedDuration: duration
+        };
         
     } catch (error) {
         speakWithBrowserTTS(textToSpeak);
-        console.error(error);
+        return {
+            audioStarted: true,
+            estimatedDuration: estimateTTSDuration(textToSpeak)
+        };
     }
 }
 

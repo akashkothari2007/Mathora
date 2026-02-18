@@ -18,6 +18,20 @@ type UseTimelineControllerProps = {
   setWhiteboardLines: React.Dispatch<React.SetStateAction<string[]>>
 }
 
+const TIMING_CONFIG = {
+  BASE_DELAY: 500,                    // ms before first action (after speech threshold)
+  STAGGER_DELAY: 400,                // ms between actions
+  AUTO_ADVANCE_BUFFER: 800,          // ms after speech ends (fallback)
+  SPEECH_PROGRESS_THRESHOLD: 0.4,     // Wait until 40% of speech is done
+  SPEECH_PROGRESS_TIMEOUT: 2000,      // Fallback timeout (ms)
+}
+
+const PAUSE_DURATIONS = {
+  short: 500,
+  medium: 1000,
+  long: 1500,
+}
+
 export function useTimelineController({
   steps,
   setGraphObjects,
@@ -31,20 +45,97 @@ export function useTimelineController({
   
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const advanceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const actionTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const audioEndedHandlerRef = useRef<(() => void) | null>(null);
 
-  // Auto-advance after timeToAdvance ms when there is a next step
+  // Wait for speech to reach progress threshold
+  const waitForSpeechProgress = (audio: HTMLAudioElement | null, threshold: number, timeout: number): Promise<void> => {
+    return new Promise((resolve) => {
+      if (!audio || !audio.duration) {
+        // No audio or duration not available, resolve immediately
+        resolve();
+        return;
+      }
+
+      const checkProgress = () => {
+        if (audio.duration && audio.currentTime / audio.duration >= threshold) {
+          resolve();
+          return;
+        }
+        // Check again after a short delay
+        setTimeout(checkProgress, 100);
+      };
+
+      checkProgress();
+      // Fallback timeout
+      setTimeout(() => resolve(), timeout);
+    });
+  };
+
+  // Smart auto-advance based on audio duration and pause duration
+  const setupAutoAdvance = (audioDuration: number, pauseDuration: "short" | "medium" | "long" | undefined, hasNext: boolean) => {
+    // Clear any existing timer
+    if (advanceTimerRef.current) {
+      clearTimeout(advanceTimerRef.current);
+      advanceTimerRef.current = null;
+    }
+
+    // Remove previous audio ended handler if it exists
+    if (audioRef.current && audioEndedHandlerRef.current) {
+      audioRef.current.removeEventListener('ended', audioEndedHandlerRef.current);
+      audioEndedHandlerRef.current = null;
+    }
+
+    if (!hasNext) return;
+
+    // Calculate auto-advance time: audio duration + pause duration
+    const pauseMs = pauseDuration ? PAUSE_DURATIONS[pauseDuration] : TIMING_CONFIG.AUTO_ADVANCE_BUFFER;
+    const autoAdvanceTime = audioDuration + pauseMs;
+
+    // Also listen for audio ended event for precise timing
+    if (audioRef.current) {
+      const pauseMs = pauseDuration ? PAUSE_DURATIONS[pauseDuration] : TIMING_CONFIG.AUTO_ADVANCE_BUFFER;
+      const onEnded = () => {
+        if (advanceTimerRef.current) {
+          clearTimeout(advanceTimerRef.current);
+          advanceTimerRef.current = null;
+        }
+        // Delay after audio ends before advancing (based on pause duration)
+        advanceTimerRef.current = setTimeout(() => {
+          setStepIndex((prev) => prev + 1);
+        }, pauseMs);
+      };
+
+      audioEndedHandlerRef.current = onEnded;
+      audioRef.current.addEventListener('ended', onEnded, { once: true });
+    }
+
+    // Set fallback timer based on estimated duration
+    advanceTimerRef.current = setTimeout(() => {
+      setStepIndex((prev) => prev + 1);
+    }, autoAdvanceTime);
+  };
+
+  // Fallback auto-advance using timeToAdvance
   useEffect(() => {
     const step = steps[stepIndex];
     const ms = step?.timeToAdvance;
     const hasNext = stepIndex + 1 < steps.length;
+    
+    // Only use timeToAdvance if we don't have audio timing
+    // (This will be overridden by smart auto-advance if audio duration is available)
     if (ms == null || !hasNext) return;
 
-    advanceTimerRef.current = setTimeout(() => {
+    // Set a fallback timer, but it will be cleared if smart auto-advance is set up
+    const fallbackTimer = setTimeout(() => {
       setStepIndex((prev) => prev + 1);
     }, ms);
+    
+    advanceTimerRef.current = fallbackTimer;
+    
     return () => {
-      if (advanceTimerRef.current) {
-        clearTimeout(advanceTimerRef.current);
+      if (advanceTimerRef.current === fallbackTimer) {
+        clearTimeout(fallbackTimer);
         advanceTimerRef.current = null;
       }
     };
@@ -52,10 +143,24 @@ export function useTimelineController({
 
   // execute the current step exactly once
   useEffect(() => {
-
-    
     if (stepIndex < 0 || stepIndex >= steps.length) return
     if (executed.current.has(stepIndex)) return
+
+    // Clear any pending action timers from previous step
+    actionTimersRef.current.forEach(timer => clearTimeout(timer));
+    actionTimersRef.current = [];
+
+    // Clear any existing advance timer
+    if (advanceTimerRef.current) {
+      clearTimeout(advanceTimerRef.current);
+      advanceTimerRef.current = null;
+    }
+
+    // Clean up previous audio ended handler
+    if (audioRef.current && audioEndedHandlerRef.current) {
+      audioRef.current.removeEventListener('ended', audioEndedHandlerRef.current);
+      audioEndedHandlerRef.current = null;
+    }
 
     if (audioRef.current) {
       audioRef.current.pause();
@@ -67,62 +172,159 @@ export function useTimelineController({
     const step = steps[stepIndex]
     console.log('Executing step', stepIndex, step)
 
-    // subtitle + camera are step-level now; use speakSubtitle for TTS (spoken form), fallback to subtitle
-    handleSubtitle({
+    // Set whiteboard lines and camera immediately (no delay needed)
+    setWhiteboardLines(prev => [...prev, ...(step.whiteboardLines ?? [])])
+    if (step.cameraTarget) setCameraTarget(step.cameraTarget)
+    else setCameraTarget(null)
+
+    // Start speech and get audio timing info
+    const audioTimingPromise = handleSubtitle({
       subtitle: step.subtitle ?? '',
       speakSubtitle: step.speakSubtitle ?? step.subtitle ?? '',
       setSubtitle,
       audioRef,
-    })
-    setWhiteboardLines(prev => [...prev, ...(step.whiteboardLines ?? [])])
+    });
 
-    if (step.cameraTarget) setCameraTarget(step.cameraTarget)
-    else setCameraTarget(null)
-
-    // apply every action in this step immediately (same "tick")
-    const addedIds: string[] = [];
-    const updatedIds: string[] = [];
-    for (const action of step.actions ?? []) {
-      switch (action.type) {
-        case 'add':
-          setGraphObjects(prev => [...prev, action.object])
-          addedIds.push(action.object.id)
-          break
-
-        case 'remove':
-          setGraphObjects(prev => prev.filter(obj => obj.id !== action.id))
-          break
-        case 'update':
-          setGraphObjects(prev =>
-            prev.map(obj =>
-              obj.id === action.id
-                ? { ...obj, props: { ...obj.props, ...action.props } }
-                : obj
-            )
-          )
-          updatedIds.push(action.id)
-          break
+    // Execute actions progressively after speech starts
+    audioTimingPromise.then(async (audioTiming) => {
+      const actions = step.actions ?? [];
+      
+      if (actions.length === 0) {
+        // No actions, just set up auto-advance
+        setupAutoAdvance(audioTiming.estimatedDuration, step.pauseDuration, stepIndex + 1 < steps.length);
+        return;
       }
-    }
 
+      // Wait for speech to reach progress threshold before starting actions
+      await waitForSpeechProgress(
+        audioRef.current,
+        TIMING_CONFIG.SPEECH_PROGRESS_THRESHOLD,
+        TIMING_CONFIG.SPEECH_PROGRESS_TIMEOUT
+      );
+
+      // Pre-calculate IDs that will be added/updated for attention states
+      const addedIds: string[] = [];
+      const updatedIds: string[] = [];
+      actions.forEach((action) => {
+        if (action.type === 'add' && action.object) {
+          addedIds.push(action.object.id);
+        } else if (action.type === 'update' && action.id) {
+          updatedIds.push(action.id);
+        }
+      });
+
+      // Execute actions with staggered delays
+      actions.forEach((action, index) => {
+        const delay = TIMING_CONFIG.BASE_DELAY + (index * TIMING_CONFIG.STAGGER_DELAY);
+        
+        const timer = setTimeout(() => {
+          switch (action.type) {
+            case 'add':
+              setGraphObjects(prev => [...prev, action.object])
+              break
+
+            case 'remove':
+              setGraphObjects(prev => prev.filter(obj => obj.id !== action.id))
+              break
+              
+            case 'update':
+              setGraphObjects(prev =>
+                prev.map(obj =>
+                  obj.id === action.id
+                    ? { ...obj, props: { ...obj.props, ...action.props } }
+                    : obj
+                )
+              )
+              break
+          }
+
+          // Apply attention states after the last action completes
+          if (index === actions.length - 1) {
+            // Small delay to ensure all state updates are applied
+            setTimeout(() => {
+              setGraphObjects((prev) =>
+                applyAttention({
+                  objects: prev,
+                  addedIds,
+                  updatedIds,
+                })
+              );
+            }, 50);
+          }
+        }, delay);
+
+        actionTimersRef.current.push(timer);
+      });
+
+      // Set up auto-advance based on audio duration
+      // Account for the last action delay
+      const lastActionDelay = TIMING_CONFIG.BASE_DELAY + ((actions.length - 1) * TIMING_CONFIG.STAGGER_DELAY);
+      const totalStepDuration = Math.max(audioTiming.estimatedDuration, lastActionDelay);
+      setupAutoAdvance(totalStepDuration, step.pauseDuration, stepIndex + 1 < steps.length);
+    }).catch((error) => {
+      console.error('Error handling subtitle:', error);
+      // Fallback: execute actions immediately if audio fails
+      const actions = step.actions ?? [];
+      const addedIds: string[] = [];
+      const updatedIds: string[] = [];
+      
+      for (const action of actions) {
+        switch (action.type) {
+          case 'add':
+            setGraphObjects(prev => [...prev, action.object])
+            addedIds.push(action.object.id)
+            break
+          case 'remove':
+            setGraphObjects(prev => prev.filter(obj => obj.id !== action.id))
+            break
+          case 'update':
+            setGraphObjects(prev =>
+              prev.map(obj =>
+                obj.id === action.id
+                  ? { ...obj, props: { ...obj.props, ...action.props } }
+                  : obj
+              )
+            )
+            updatedIds.push(action.id)
+            break
+        }
+      }
+      
+      setGraphObjects((prev) =>
+        applyAttention({
+          objects: prev,
+          addedIds,
+          updatedIds,
+        })
+      );
+    });
+
+    return () => {
+      // Cleanup: clear all action timers
+      actionTimersRef.current.forEach(timer => clearTimeout(timer));
+      actionTimersRef.current = [];
+    };
     
-    setGraphObjects((prev) =>
-      applyAttention({
-        objects: prev,
-        addedIds,
-        updatedIds,
-      })
-    );
-    
-  }, [stepIndex, steps, setGraphObjects, setSubtitle, setCameraTarget])
+  }, [stepIndex, steps, setGraphObjects, setSubtitle, setCameraTarget, setWhiteboardLines, setStepIndex])
 
   
   // cleanup audio when component unmounts
   useEffect(() => {
     return () => {
       if (audioRef.current) {
+        if (audioEndedHandlerRef.current) {
+          audioRef.current.removeEventListener('ended', audioEndedHandlerRef.current);
+          audioEndedHandlerRef.current = null;
+        }
         audioRef.current.pause();
         audioRef.current.currentTime = 0;
+      }
+      // Clear all timers
+      actionTimersRef.current.forEach(timer => clearTimeout(timer));
+      actionTimersRef.current = [];
+      if (advanceTimerRef.current) {
+        clearTimeout(advanceTimerRef.current);
+        advanceTimerRef.current = null;
       }
     }
   }, [])

@@ -193,6 +193,7 @@ export const ActionSchema = z.object({
 export const StepSchema = z.object({
   subtitle: CleanedString.optional(),
   speakSubtitle: CleanedString.optional(),
+  pauseDuration: z.enum(["short", "medium", "long"]).optional(),
   cameraTarget: CameraTargetSchema.nullable().optional(),
   actions: z.array(ActionSchema).optional(),
   whiteboardLines: z.array(z.string()).optional(),
@@ -213,6 +214,7 @@ export type Step = z.infer<typeof StepSchema>;
 export const OutlineStepSchema = z.object({
   subtitle: CleanedString,
   visualGoal: CleanedString,
+  pauseDuration: z.enum(["short", "medium", "long"]).optional(),
 });
 export type OutlineStep = z.infer<typeof OutlineStepSchema>;
 export const OutlineSchema = z.array(OutlineStepSchema); 

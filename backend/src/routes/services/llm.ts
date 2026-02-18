@@ -78,6 +78,7 @@ export async function generateStep(
 ): Promise<Step> {
   const max_attempts = 3;
   const subtitleFromOutline = outline[step_number]?.subtitle ?? "";
+  const pauseDurationFromOutline = outline[step_number]?.pauseDuration;
 
   for (let attempt = 1; attempt <= max_attempts; attempt++) {
     let cleaned = "";
@@ -91,6 +92,7 @@ export async function generateStep(
       const step: Step = {
         subtitle: subtitleFromOutline ?? "",
         speakSubtitle: parsed.speakSubtitle ?? subtitleFromOutline ?? "",
+        pauseDuration: pauseDurationFromOutline,
         actions: parsed.actions ?? [],
         cameraTarget: parsed.cameraTarget ?? undefined,
       };
@@ -105,6 +107,7 @@ export async function generateStep(
           ...fallbackStep,
           subtitle: subtitleFromOutline ?? fallbackStep.subtitle,
           speakSubtitle: subtitleFromOutline ?? fallbackStep.speakSubtitle,
+          pauseDuration: pauseDurationFromOutline,
         };
       }
       if (e?.name === 'ZodError') {
@@ -130,6 +133,7 @@ export async function generateStep(
     ...fallbackStep,
     subtitle: subtitleFromOutline ?? fallbackStep.subtitle,
     speakSubtitle: subtitleFromOutline ?? fallbackStep.speakSubtitle,
+    pauseDuration: pauseDurationFromOutline,
   };
 }
 
