@@ -117,6 +117,22 @@ SUBTITLE (the main teaching content — 3–5 sentences the user will hear)
 
 ---
 
+You can use these visual actions in your outline's "visualGoal":
+- add: Add a new object to the graph (function, point, label, area, slidingTangent, line, secantLine)
+- update: Update an existing object’s properties (e.g., move a point, change a function’s formula, update a label)
+- remove: Remove an object by its id
+
+Object types you can use:
+- function: Graph a function (e.g., f1 = x^2)
+- point: Add or move a point (e.g., p1 at (1,2))
+- label: Add a label to a point, line, or area
+- area: Shade a region under a curve
+- slidingTangent: Show a tangent that moves along the curve
+- line: Draw a line between two points
+- secantLine: Draw a secant line between two points
+
+When describing the visualGoal, be specific and use these actions and object types. Prefer "update" for smooth transitions (e.g., update function f1 to a new formula) instead of removing and adding.
+
 VISUAL GOAL (simple, short — what to draw this step only)
 - Plain words: "add nothing", "add a simple function", "add a line", "add a secant", "update the secant", "add a point", "draw a triangle" (with lines), "shade the area", "label the graph" etc.
 - Make sure it is specific and complete with ids for each object (p1, p2 for two points etc) with no reusing ids absolutely at all
