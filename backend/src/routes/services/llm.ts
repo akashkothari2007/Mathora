@@ -72,7 +72,7 @@ export async function generateStep(
   question: string,
   step_number: number,
   outline: OutlineStep[],
-  previousStepJson?: string,
+  prevStep?: Step | null,
   objects?: Record<string, NonNullable<Action["object"]>>,
   whiteboardLines?: string[]
 ): Promise<Step> {
@@ -83,7 +83,7 @@ export async function generateStep(
   for (let attempt = 1; attempt <= max_attempts; attempt++) {
     let cleaned = "";
     try {
-      const prompt = buildPrompt(question, step_number, outline, previousStepJson, objects, whiteboardLines);
+      const prompt = buildPrompt(question, step_number, outline, prevStep, objects, whiteboardLines);
       const raw = await callAzureOpenAI(prompt);
       console.log(raw);
       cleaned = raw.trim().replace(/^```json\s*/i, "").replace(/^```\s*/i, "").replace(/\s*```$/, "");

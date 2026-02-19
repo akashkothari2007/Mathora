@@ -1,17 +1,47 @@
 import { Action } from "./schema";
-import type { OutlineStep } from "./schema";
+import type { OutlineStep, Step } from "./schema";
+
+/** Compact inventory: "f1 (function), pt1 (point), sec1 (secant)" or "None." */
+function formatCurrentGraph(objects: Record<string, NonNullable<Action["object"]>>): string {
+  const entries = Object.entries(objects);
+  if (entries.length === 0) return "None.";
+  return entries
+    .map(([id, obj]) => `${id} (${obj.type})`)
+    .join(", ") + ".";
+}
+
+/** One-line summary of what the previous step did: "Added f1, pt1. Updated sec1." or "First step." */
+function formatPreviousStepSummary(step: Step | null | undefined): string {
+  if (!step?.actions?.length) return "First step.";
+  const added: string[] = [];
+  const updated: string[] = [];
+  const removed: string[] = [];
+  for (const a of step.actions) {
+    if (a.type === "add" && a.object) added.push(a.object.id);
+    else if (a.type === "update" && a.id) updated.push(a.id);
+    else if (a.type === "remove" && a.id) removed.push(a.id);
+  }
+  const parts: string[] = [];
+  if (added.length) parts.push(`Added ${added.join(", ")}.`);
+  if (updated.length) parts.push(`Updated ${updated.join(", ")}.`);
+  if (removed.length) parts.push(`Removed ${removed.join(", ")}.`);
+  return parts.length ? parts.join(" ") : "No actions.";
+}
 
 export function buildPrompt(
   userQuestion: string,
   stepNumber: number,
   outline: OutlineStep[],
-  previousStepsJson?: string,
+  prevStep?: Step | null,
   objects?: Record<string, NonNullable<Action["object"]>>,
   _whiteboardLines?: string[]
 ) {
   const stepInfo = outline[stepNumber];
   const stepSubtitle = stepInfo?.subtitle ?? "";
   const stepVisualGoal = stepInfo?.visualGoal ?? "";
+  const currentGraphText = formatCurrentGraph(objects ?? {});
+  const previousStepSummary = formatPreviousStepSummary(prevStep ?? null);
+
   return `
 
 You are generating step ${stepNumber + 1} of ${outline.length}.
@@ -28,7 +58,9 @@ ${stepVisualGoal}
 
 Your job: (1) Output the graph actions (and optional cameraTarget) that fulfill the visual goal above. (2) Output speakSubtitle: the spoken version of THIS STEP'S NARRATION above — same content but in words you would say aloud for text-to-speech. Convert any math notation to spoken form (e.g. x^2 → "x squared", 9-(x+2)² → "9 minus the quantity x plus 2, squared"; use "quantity" for grouping so it's unambiguous when heard). If the narration has no math notation, speakSubtitle can equal it. Do NOT generate a new subtitle; use the narration given. Do only what this step asks: e.g. if the goal says "add nothing", return empty actions; if it says "add the function", add the function; if it says "update the secant", update the existing secant. Build on objects from previous steps; do not re-add what is already there unless the goal says to replace it.
 
-CURRENT GRAPH: ${JSON.stringify(objects ?? {})}
+CURRENT GRAPH: ${currentGraphText}
+
+PREVIOUS STEP: ${previousStepSummary}
 
 ACTIONS YOU CAN USE:
 - add: put a new object on the graph (use new IDs: f1, pt1, tan1, area1, sec1, ln1, lbl1), no reusing ids for any two objects
@@ -93,8 +125,6 @@ OUTPUT: Only valid JSON, no markdown or backticks. Include speakSubtitle (spoken
   "speakSubtitle": "string — same as narration but in spoken words, math notation converted"
 }
 
-Context:
-Previous step: ${previousStepsJson ?? "null"}
 Question: ${JSON.stringify(userQuestion)}
 `.trim();
 }
@@ -103,10 +133,22 @@ Question: ${JSON.stringify(userQuestion)}
 
 export function buildOutlinePrompt(userQuestion: string) {
   return `
-You are writing a short lesson outline. The outline is what brings everything together: cohesive story, great explanations, and clear instructions for what to draw each step.
+You are writing a short lesson outline. The outline is the single source of truth: cohesive story, great explanations, and clear instructions for what to draw each step. A later step generator will receive ONLY your visualGoal and a short "current graph" summary — so your visualGoal must be specific and use consistent object ids.
 
 Return ONLY valid JSON:
 { "outline": [ { "subtitle": string, "visualGoal": string, "pauseDuration": "short" | "medium" | "long" }, ... ] }
+
+---
+
+OBJECT IDS (use these exact prefixes; never reuse an id for two different objects)
+- function: f1, f2, ...
+- point: pt1, pt2, ...
+- label: lbl1, lbl2, ...
+- line: ln1, ln2, ...
+- secantLine: sec1, sec2, ...
+- slidingTangent: tan1, tan2, ...
+- area: area1, area2, ...
+Use the same id across steps for the same object (e.g. "update sec1" in step 4 refers to sec1 added in step 2). Never use p1/p2 — use pt1, pt2 for points.
 
 ---
 
@@ -115,46 +157,37 @@ SUBTITLE (the main teaching content — 3–5 sentences the user will see and re
 - Use analogies and "what if we..." so it feels like a conversation. One main idea per step.
 - Natural, friendly tone. Make the intuition crystal clear; then the math follows.
 - No jargon dumps. If you use a term, briefly say what it means.
+- Readability: write so it can be read aloud; avoid long strings of symbols. Prefer "x squared" in prose when possible; keep notation minimal so TTS and the reader can follow.
+- Correctness: every number or formula you state in the subtitle must appear on the graph in that step or a prior step (e.g. if you say "we get x = 2", there must be a point or label at x = 2). Do not state an answer without showing it visually.
 
 ---
 
-You can use these visual actions in your outline's "visualGoal":
-- add: Add a new object to the graph (function, point, label, area, slidingTangent, line, secantLine)
-- update: Update an existing object’s properties (e.g., move a point, change a function’s formula, update a label)
-- remove: Remove an object by its id
-
-Object types you can use:
-- function: Graph a function (e.g., f1 = x^2)
-- point: Add or move a point (e.g., p1 at (1,2))
-- label: Add a label to a point, line, or area
-- area: Shade a region under a curve
-- slidingTangent: Show a tangent that moves along the curve
-- line: Draw a line between two points
-- secantLine: Draw a secant line between two points
-
-When describing the visualGoal, be specific and use these actions and object types. Prefer "update" for smooth transitions (e.g., update function f1 to a new formula) instead of removing and adding.
-
-VISUAL GOAL (simple, short — what to draw this step only)
-- Plain words: "add nothing", "add a simple function", "add a line", "add a secant", "update the secant", "add a point", "draw a triangle" (with lines), "shade the area", "label the graph" etc.
-- Make sure it is specific and complete with ids for each object (p1, p2 for two points etc) with no reusing ids absolutely at all
-- e.g. p1 at 1, 2, and p2 at 3, 4, and l1 connecting them could be a visual goal for one step
-- Spread visuals across steps so the lesson builds.
+VISUAL GOAL (what to draw this step only — the step generator gets only this and "current graph: id (type), ...")
+- Be specific and unambiguous. Use object ids: "Add f1 (y = x^2). Add sec1 from x=-1 to x=2." not "add a curve and a line".
+- One main visual change per step (or one logical group: e.g. "Add f1 and lbl1 labeling the vertex").
 - First step often: "Add nothing." so we don't dump the graph before the intro.
-- Match the subtitle: when you say "here's the curve", that step's goal is "add the function". When you say "draw the line between two points", that step's goal is "add a secant line" or "add a line".
-- Everything you solve or compute must be drawn on the graph so the user can see it. If you find a derivative, graph the derivative. If you solve and get x = -1 and x = 1 (e.g. critical points), add points or labels at those x values on the graph. Do not just state the answer — show it. The user should learn by seeing every step on the graph.
-- Make sure you finish the lesson with the whole goal visually to not leave the user hanging it should be complete, accurate and make sense to users who are unfamiliar with the topic
-- for example if explaining average rate of change, show with labels the rise and run and divide to show the average rate of change, complete the lesson with the example and numbers
-- You are a math teacher and you are building a specific lesson plan with specific, complete and smooth visuals to help the user learn
+- Later steps: "Add pt1 at (1,1).", "Update sec1 so startX=0.5, endX=1.5.", "Add area1 under f1 from x=0 to x=2.", "Add lbl1 at vertex."
+- Match the subtitle: when you say "here's the curve", that step's goal is "add f1". When you say "draw the line between two points", that step's goal is "add sec1" or "add ln1".
+- Prefer "update" for smooth transitions (e.g. "Update sec1 so the two points are closer.") instead of remove + add.
+- Everything you solve or compute must be drawn: derivative → graph it; critical points x = -1, 1 → add points or labels at those x. The user learns by seeing every step on the graph.
+- Last step: show the full result (e.g. area shaded, points and labels in place, final formula visible). Complete and accurate so a user unfamiliar with the topic can follow.
+- Example (average rate of change): show rise and run with labels, then the ratio; complete the lesson with the example and numbers on the graph.
+
+Object types: function (f1), point (pt1), label (lbl1), line (ln1), secantLine (sec1), slidingTangent (tan1), area (area1).
 
 ---
 
-PAUSE DURATION (optional — how long to pause after this step before auto-advancing)
-- "short": 0.5 seconds — quick transitions, simple concepts
-- "medium": 1 second — default, most steps use this
-- "long": 1.5 seconds — complex concepts, let user process
-- Use "long" for steps with important insights or multiple visuals
-- Use "short" for quick setup steps or transitions
-- Omit for default "medium" behavior
+STRUCTURE (typical arc)
+- Step 1: Often "Add nothing." — intro/motivation.
+- Steps 2–3: Setup — add main function (f1) or diagram.
+- Middle steps: Build — add points, lines, labels step by step; update when you want to change something.
+- Near end: Payoff — shade area, show result, add final labels.
+- Last step: Full visual state so the lesson feels complete.
+
+---
+
+PAUSE DURATION (optional)
+- "short": quick transitions. "medium": default. "long": complex ideas or multiple visuals. Omit for "medium".
 
 ---
 
@@ -166,11 +199,11 @@ IF the user asks anything that is NOT a math question (slurs, politics, history,
 Example for "Explain the derivative":
 [
   { "subtitle": "What if we could measure how steep a curve is at a single point? That's exactly what the derivative does. Think of driving a car: your speedometer shows how fast you're going right now — that's the derivative of your position.", "visualGoal": "Add nothing.", "pauseDuration": "medium" },
-  { "subtitle": "Here's a trick. Take two points on the curve and draw the line between them. That line is called a secant. Its slope is the average rate of change between those two points — like your average speed over a stretch of road.", "visualGoal": "Add a simple function like x squared. Add a secant line between two x values.", "pauseDuration": "medium" },
-  { "subtitle": "Now imagine moving the second point closer and closer to the first. The secant line rotates and approaches a limiting line — the tangent. That tangent just kisses the curve at one point.", "visualGoal": "Update the secant so the two points are closer together, near x=1.", "pauseDuration": "long" },
-  { "subtitle": "The slope of that tangent line is the derivative at that point. So the derivative is the instantaneous rate of change: how fast things are changing right at that moment.", "visualGoal": "Add a point at the spot where the tangent touches, or leave as is.", "pauseDuration": "medium" }
+  { "subtitle": "Here's a trick. Take two points on the curve and draw the line between them. That line is called a secant. Its slope is the average rate of change between those two points — like your average speed over a stretch of road.", "visualGoal": "Add f1 (y = x^2). Add sec1 between x=-1 and x=2.", "pauseDuration": "medium" },
+  { "subtitle": "Now imagine moving the second point closer and closer to the first. The secant line rotates and approaches a limiting line — the tangent. That tangent just kisses the curve at one point.", "visualGoal": "Update sec1 so the two points are closer together, near x=1.", "pauseDuration": "long" },
+  { "subtitle": "The slope of that tangent line is the derivative at that point. So the derivative is the instantaneous rate of change: how fast things are changing right at that moment.", "visualGoal": "Add pt1 at the point where the tangent touches (1,1). Add lbl1 there.", "pauseDuration": "medium" }
 ]
-4-7 steps is fine may vary
+4–7 steps is fine; may vary by topic.
 
 Question:
 ${JSON.stringify(userQuestion)}

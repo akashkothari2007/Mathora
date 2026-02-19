@@ -50,7 +50,7 @@ export async function startSessionRunner(sessionId: string) {
           s.prompt,
           stepIndex,
           s.outline,
-          s.prevStep ? JSON.stringify(s.prevStep) : undefined,
+          s.prevStep ?? undefined,
           s.objects,
           s.whiteboardLines
         );
