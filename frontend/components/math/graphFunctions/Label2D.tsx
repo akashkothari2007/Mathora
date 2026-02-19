@@ -125,19 +125,58 @@ function opentypePathToPath2D(path: opentype.Path): Path2D {
 }
 
 let fontCache: Font | null = null
+let fallbackFontCache: Font | null = null
 let fontLoading = false
-const fontCallbacks: Array<(font: Font) => void> = []
+const fontCallbacks: Array<(primary: Font, fallback: Font) => void> = []
 
-function loadFont(cb: (font: Font) => void) {
-    if (fontCache) { cb(fontCache); return }
+const FALLBACK_FONT_URL = 'https://cdn.jsdelivr.net/npm/dejavu-fonts-ttf@2.37.3/ttf/DejaVuSans.ttf'
+
+function isMissingGlyph(font: Font, char: string): boolean {
+    try {
+        const glyph = font.charToGlyph(char)
+        const code = char.charCodeAt(0)
+        if (glyph.name === '.notdef') return true
+        if (glyph.unicode != null && glyph.unicode !== code) return true
+        return false
+    } catch {
+        return true
+    }
+}
+
+function loadFont(cb: (primary: Font, fallback: Font) => void) {
+    if (fontCache && fallbackFontCache) {
+        cb(fontCache, fallbackFontCache)
+        return
+    }
     fontCallbacks.push(cb)
     if (fontLoading) return
     fontLoading = true
+
+    const onBothLoaded = () => {
+        if (fontCache && fallbackFontCache) {
+            fontCallbacks.forEach(fn => fn(fontCache!, fallbackFontCache!))
+            fontCallbacks.length = 0
+        }
+    }
+
     opentype.load('/fonts/cmunrm.ttf', (err, font) => {
-        if (err || !font) { console.error('Font load failed', err); return }
-        fontCache = font
-        fontCallbacks.forEach(fn => fn(font))
-        fontCallbacks.length = 0
+        if (err || !font) {
+            console.warn('Primary font (cmunrm) load failed, using fallback only', err)
+        } else {
+            fontCache = font
+        }
+        if (fontCache && fallbackFontCache) onBothLoaded()
+    })
+
+    opentype.load(FALLBACK_FONT_URL, (err, font) => {
+        if (err || !font) {
+            console.error('Fallback font (DejaVu Sans) load failed', err)
+            fontLoading = false
+            return
+        }
+        fallbackFontCache = font
+        if (!fontCache) fontCache = font
+        if (fontCache && fallbackFontCache) onBothLoaded()
     })
 }
 
@@ -155,16 +194,19 @@ export default function Label2D({ text, position, color = 'white', fontSize = 0.
     const canvasRef = useRef<HTMLCanvasElement>(document.createElement('canvas'))
 
     useEffect(() => {
-        loadFont((font) => {
+        loadFont((primary, fallback) => {
             const chars = text.split('')
             const data: CharData[] = []
             let cursorX = 0
             const baseline = CANVAS_HEIGHT * 0.75
 
             chars.forEach((char, i) => {
+                const font = isMissingGlyph(primary, char) ? fallback : primary
+                const scale = FONT_PX / font.unitsPerEm
+
                 if (char === ' ') {
                     const spaceGlyph = font.charToGlyph(' ')
-                    cursorX += (spaceGlyph.advanceWidth || 500) * (FONT_PX / font.unitsPerEm)
+                    cursorX += (spaceGlyph.advanceWidth || 500) * scale
                     return
                 }
 
@@ -173,7 +215,7 @@ export default function Label2D({ text, position, color = 'white', fontSize = 0.
                 const pathLength = svgString.length > 10 ? getPathLength(svgString) : 0
                 const path2D = opentypePathToPath2D(path)
                 const glyph = font.charToGlyph(char)
-                const advance = (glyph.advanceWidth || 500) * (FONT_PX / font.unitsPerEm)
+                const advance = (glyph.advanceWidth || 500) * scale
 
                 data.push({
                     path2D,

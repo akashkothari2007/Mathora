@@ -6,4 +6,5 @@ export { cameraTimeline } from "./cameraTimeline";
 export { lineTimeline } from "./lineTimeline";
 export { secantLineTimeline } from "./secantLineTimeline";
 export { label2DTestTimeline } from "./label2DTestTimeline";
+export { labelSymbolTestTimeline } from "./labelSymbolTestTimeline";
 export { functionAttentionTimeline } from "./functionAttentionTimeline";

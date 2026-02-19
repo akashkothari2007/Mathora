@@ -9,6 +9,7 @@ import {
   lineTimeline,
   secantLineTimeline,
   label2DTestTimeline,
+  labelSymbolTestTimeline,
   functionAttentionTimeline,
 } from "../math/timeline/coreFunctionTests";
 import type { Step } from "../math/types/steps";
@@ -23,6 +24,7 @@ export function resolveTestTimeline(prompt: string): Step[] | null {
   if (prompt === "line test") return lineTimeline;
   if (prompt === "secant test") return secantLineTimeline;
   if (prompt === "type test") return label2DTestTimeline;
+  if (prompt === "symbol test") return labelSymbolTestTimeline;
   if (prompt === "function attention test") return functionAttentionTimeline;
   return null;
 }
