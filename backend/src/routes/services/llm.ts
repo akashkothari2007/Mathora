@@ -2,6 +2,7 @@ import { Action, Step, TimelineSchema } from "./schema";
 import type { OutlineStep } from "./schema";
 import { buildPrompt } from "./prompt";
 import { buildOutlinePrompt } from "./prompt";
+import { validateAndFixWhiteboardLines } from "./latex";
 import dotenv from "dotenv";
 import { jsonrepair } from "jsonrepair";
 import { string } from "zod/v4/core/regexes";
@@ -89,12 +90,21 @@ export async function generateStep(
       cleaned = raw.trim().replace(/^```json\s*/i, "").replace(/^```\s*/i, "").replace(/\s*```$/, "");
       const parsed = StepGenerationResponseSchema.parse(JSON.parse(cleaned));
 
+      let stepWhiteboardLines = parsed.whiteboardLines?.length ? parsed.whiteboardLines : undefined;
+      if (stepWhiteboardLines && outline[step_number]?.whiteboardGoal) {
+        stepWhiteboardLines = stepWhiteboardLines.slice(0, 2);
+      }
+      if (stepWhiteboardLines?.length) {
+        stepWhiteboardLines = validateAndFixWhiteboardLines(stepWhiteboardLines);
+      }
+
       const step: Step = {
         subtitle: subtitleFromOutline ?? "",
         speakSubtitle: parsed.speakSubtitle ?? subtitleFromOutline ?? "",
         pauseDuration: pauseDurationFromOutline,
         actions: parsed.actions ?? [],
         cameraTarget: parsed.cameraTarget ?? undefined,
+        whiteboardLines: stepWhiteboardLines ?? undefined,
       };
       StepSchema.parse(step);
       return step;

@@ -199,11 +199,12 @@ export const StepSchema = z.object({
   whiteboardLines: z.array(z.string()).optional(),
 });
 
-/** AI returns actions + optional cameraTarget + optional speakSubtitle; we inject subtitle from outline. */
+/** AI returns actions + optional cameraTarget + optional speakSubtitle + optional whiteboardLines; we inject subtitle from outline. */
 export const StepGenerationResponseSchema = z.object({
   actions: z.array(ActionSchema).optional(),
   cameraTarget: CameraTargetSchema.nullable().optional(),
   speakSubtitle: CleanedString.optional(),
+  whiteboardLines: z.array(z.string()).optional(),
 });
 
 export const TimelineSchema = z.array(StepSchema);
@@ -214,6 +215,7 @@ export type Step = z.infer<typeof StepSchema>;
 export const OutlineStepSchema = z.object({
   subtitle: CleanedString,
   visualGoal: CleanedString,
+  whiteboardGoal: CleanedString.optional(),
   pauseDuration: z.enum(["short", "medium", "long"]).optional(),
 });
 export type OutlineStep = z.infer<typeof OutlineStepSchema>;

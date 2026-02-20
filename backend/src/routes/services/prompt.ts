@@ -39,8 +39,19 @@ export function buildPrompt(
   const stepInfo = outline[stepNumber];
   const stepSubtitle = stepInfo?.subtitle ?? "";
   const stepVisualGoal = stepInfo?.visualGoal ?? "";
+  const stepWhiteboardGoal = stepInfo?.whiteboardGoal ?? "";
   const currentGraphText = formatCurrentGraph(objects ?? {});
   const previousStepSummary = formatPreviousStepSummary(prevStep ?? null);
+
+  const whiteboardBlock = stepWhiteboardGoal
+    ? `
+
+THIS STEP'S WHITEBOARD GOAL (describe what to show — you must output whiteboardLines in LaTeX that express this mathematically; do NOT paste this text verbatim; 1–2 lines only):
+"""
+${stepWhiteboardGoal}
+"""
+`
+    : "";
 
   return `
 
@@ -54,7 +65,7 @@ ${stepSubtitle}
 THIS STEP'S VISUAL GOAL (exactly what to do on the graph this step — match this):
 """
 ${stepVisualGoal}
-"""
+"""${whiteboardBlock}
 
 Your job: (1) Output the graph actions (and optional cameraTarget) that fulfill the visual goal above. (2) Output speakSubtitle: the spoken version of THIS STEP'S NARRATION above — same content but in words you would say aloud for text-to-speech. Convert any math notation to spoken form (e.g. x^2 → "x squared", 9-(x+2)² → "9 minus the quantity x plus 2, squared"; use "quantity" for grouping so it's unambiguous when heard). If the narration has no math notation, speakSubtitle can equal it. Do NOT generate a new subtitle; use the narration given. Do only what this step asks: e.g. if the goal says "add nothing", return empty actions; if it says "add the function", add the function; if it says "update the secant", update the existing secant. Build on objects from previous steps; do not re-add what is already there unless the goal says to replace it.
 
@@ -112,17 +123,25 @@ Give only what matters: e.g. just height to zoom vertically, or just width. If y
   {"cameraTarget":{"center":[0,0,0],"width":8}}
   {"cameraTarget":{"center":[1,1,0],"height":3}}
 
+whiteboardLines (optional) — LaTeX strings only. Each line is rendered as math by KaTeX. Use for calculations and algebraic steps only; do NOT use for graph objects or labels (those go in actions).
+- If this step has a WHITEBOARD GOAL above, convert that goal into LaTeX — do NOT copy the goal as plain English. E.g. goal "Show the roots: x = 2 and x = -2" → output ["x = 2 \\\\text{ and } x = -2"] or ["x = \\\\pm 2"], NOT ["Show the roots: x = 2 and x = -2."]. Output 1–2 LaTeX lines that express the math; no prose.
+- WHEN TO USE (if no whiteboard goal): When the step involves solving an equation or algebraic work — first line "x^2 = 4", next line "x = \\pm 2". Omit when the step is only graph/labels/camera.
+- LaTeX RULES (critical): Every command needs a backslash. Use \\pm (plus-minus), \\sqrt{...}, \\frac{a}{b}, \\text{...} for plain text. Never write bare "pm" or "sqrt" — they will not render.
+- JSON ESCAPING: In JSON, a backslash is escaped. To get one backslash in the string value you must write two backslashes. So for plus-minus you must write \\\\pm in the JSON (the parsed value will be \\pm). Example correct JSON: "whiteboardLines": ["x^2 - 4 = 0", "x = \\\\pm 2"]
+- FORMAT: Each string is one line; they appear in order (staggered).
+
 RULES:
 - All numbers bare: {"x":1,"y":1} not {"x":"1","y":"1"}.
 - Function f: use a string the frontend can eval: "x*x", "Math.sin(x)", "2*x+1".
 - Use 3.14159265359 for pi if needed.
 - LABEL EVERY SINGLE GRAPH USING THE LABEL
 - label whatever is necessary to make it further understandable for the user
-OUTPUT: Only valid JSON, no markdown or backticks. Include speakSubtitle (spoken version of the step narration above).
+OUTPUT: Only valid JSON, no markdown or backticks. Include speakSubtitle (spoken version of the step narration above). Include whiteboardLines only when this step has calculations or algebra to show (array of LaTeX strings, or omit).
 {
   "actions": [...],
   "cameraTarget": { ... } or omit,
-  "speakSubtitle": "string — same as narration but in spoken words, math notation converted"
+  "speakSubtitle": "string — same as narration but in spoken words, math notation converted",
+  "whiteboardLines": ["latex line 1", "latex line 2"] or omit
 }
 
 Question: ${JSON.stringify(userQuestion)}
@@ -136,7 +155,7 @@ export function buildOutlinePrompt(userQuestion: string) {
 You are writing a short lesson outline. The outline is the single source of truth: cohesive story, great explanations, and clear instructions for what to draw each step. A later step generator will receive ONLY your visualGoal and a short "current graph" summary — so your visualGoal must be specific and use consistent object ids.
 
 Return ONLY valid JSON:
-{ "outline": [ { "subtitle": string, "visualGoal": string, "pauseDuration": "short" | "medium" | "long" }, ... ] }
+{ "outline": [ { "subtitle": string, "visualGoal": string, "whiteboardGoal": string (optional), "pauseDuration": "short" | "medium" | "long" }, ... ] }
 
 ---
 
@@ -162,14 +181,23 @@ SUBTITLE (the main teaching content — 3–5 sentences the user will see and re
 ---
 
 VISUAL GOAL (what to draw this step only — the step generator gets only this and "current graph: id (type), ...")
-- Be specific and unambiguous. Use object ids: "Add f1 (y = x^2). Add sec1 from x=-1 to x=2." not "add a curve and a line".
+- The step generator sees only id and type (e.g. "f1 (function)"); it does not see formulas. When the goal involves a curve (area under it, secant on it, tangent on it), include the curve formula in the goal so the step generator can output the correct function.
+- For area, secantLine, and slidingTangent: include the curve formula in the visual goal. Good: "Add area1 under x^2 - 4 from x=-2 to x=2." or "Add area1 under the curve y = x^2 - 4 from x=-2 to x=2." Bad: "Add area1 under f1 from x=-2 to x=2." (step generator does not know what f1 is.) Same for secant/tangent: "Add sec1 on y = x^2 - 4 between x=-1 and x=2" not "Add sec1 on f1 between ...".
+- Be specific and unambiguous. Use object ids: "Add f1 (y = x^2). Add sec1 on y = x^2 from x=-1 to x=2." not "add a curve and a line".
 - One main visual change per step (or one logical group: e.g. "Add f1 and lbl1 labeling the vertex").
 - First step often: "Add nothing." so we don't dump the graph before the intro.
-- Later steps: "Add pt1 at (1,1).", "Update sec1 so startX=0.5, endX=1.5.", "Add area1 under f1 from x=0 to x=2.", "Add lbl1 at vertex."
+- Later steps: "Add pt1 at (1,1).", "Update sec1 so startX=0.5, endX=1.5.", "Add area1 under x^2 from x=0 to x=2.", "Add lbl1 at vertex."
 - Match the subtitle: when you say "here's the curve", that step's goal is "add f1". When you say "draw the line between two points", that step's goal is "add sec1" or "add ln1".
 - Prefer "update" for smooth transitions (e.g. "Update sec1 so the two points are closer.") instead of remove + add.
 - Everything you solve or compute must be drawn: derivative → graph it; critical points x = -1, 1 → add points or labels at those x. The user learns by seeing every step on the graph.
 - Last step: show the full result (e.g. area shaded, points and labels in place, final formula visible). Complete and accurate so a user unfamiliar with the topic can follow.
+
+---
+
+WHITEBOARD / EQUATION-SOLVING (use whiteboardGoal when the lesson is about solving equations or algebra-heavy)
+- For "solve ..." or algebra-heavy questions (e.g. "solve x^2 - 3x - 4 = 0", "use the quadratic formula"), plan steps so the main teaching is on the whiteboard: one or two equations per step (e.g. step 1: write the equation; step 2: substitute into formula; step 3: simplify discriminant; step 4: roots).
+- Use whiteboardGoal to describe exactly what to show on the whiteboard this step. Use visualGoal for graph-only work, or "Add nothing." when the step is purely algebra.
+- When a step has a whiteboardGoal, the step generator will output whiteboardLines in LaTeX to fulfill it. Do not dump the whole solution in one step — spread it over several steps with 1–2 equations each.
 - Example (average rate of change): show rise and run with labels, then the ratio; complete the lesson with the example and numbers on the graph.
 
 Object types: function (f1), point (pt1), label (lbl1), line (ln1), secantLine (sec1), slidingTangent (tan1), area (area1).
@@ -201,6 +229,14 @@ Example for "Explain the derivative":
   { "subtitle": "Here's a trick. Take two points on the curve and draw the line between them. That line is called a secant. Its slope is the average rate of change between those two points — like your average speed over a stretch of road.", "visualGoal": "Add f1 (y = x^2). Add sec1 between x=-1 and x=2.", "pauseDuration": "medium" },
   { "subtitle": "Now imagine moving the second point closer and closer to the first. The secant line rotates and approaches a limiting line — the tangent. That tangent just kisses the curve at one point.", "visualGoal": "Update sec1 so the two points are closer together, near x=1.", "pauseDuration": "long" },
   { "subtitle": "The slope of that tangent line is the derivative at that point. So the derivative is the instantaneous rate of change: how fast things are changing right at that moment.", "visualGoal": "Add pt1 at the point where the tangent touches (1,1). Add lbl1 there.", "pauseDuration": "medium" }
+]
+
+Example for "Solve x^2 - 3x - 4 = 0" (equation-solving: use whiteboardGoal; keep visualGoal minimal or "Add nothing." for algebra-only steps):
+[
+  { "subtitle": "We'll solve this quadratic step by step. First, here's our equation: x squared minus 3x minus 4 equals zero.", "visualGoal": "Add nothing.", "whiteboardGoal": "Show the equation: x^2 - 3x - 4 = 0", "pauseDuration": "medium" },
+  { "subtitle": "We use the quadratic formula: x equals negative b plus or minus the square root of b squared minus 4ac, all over 2a. Here a is 1, b is minus 3, and c is minus 4.", "visualGoal": "Add nothing.", "whiteboardGoal": "Show the quadratic formula with a=1, b=-3, c=-4 substituted in", "pauseDuration": "long" },
+  { "subtitle": "Under the square root we get b squared minus 4ac: that's 9 plus 16, which is 25.", "visualGoal": "Add nothing.", "whiteboardGoal": "Show discriminant: b^2 - 4ac = 9 + 16 = 25", "pauseDuration": "medium" },
+  { "subtitle": "So x is 3 plus or minus 5 over 2. That gives x equals 4 or x equals minus 1. We're done.", "visualGoal": "Add f1 (y = x^2 - 3*x - 4). Add pt1 and pt2 at roots (4,0) and (-1,0). Add lbl1 and lbl2.", "whiteboardGoal": "Show x = (3 ± 5)/2 and final roots x = 4, x = -1", "pauseDuration": "medium" }
 ]
 4–7 steps is fine; may vary by topic.
 
