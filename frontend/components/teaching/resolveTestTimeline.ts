@@ -11,6 +11,7 @@ import {
   label2DTestTimeline,
   labelSymbolTestTimeline,
   functionAttentionTimeline,
+  whiteboardTimeline,
 } from "../math/timeline/coreFunctionTests";
 import type { Step } from "../math/types/steps";
 
@@ -26,5 +27,6 @@ export function resolveTestTimeline(prompt: string): Step[] | null {
   if (prompt === "type test") return label2DTestTimeline;
   if (prompt === "symbol test") return labelSymbolTestTimeline;
   if (prompt === "function attention test") return functionAttentionTimeline;
+  if (prompt == 'whiteboard test') return whiteboardTimeline;
   return null;
 }

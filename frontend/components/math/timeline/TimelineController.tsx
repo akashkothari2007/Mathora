@@ -24,6 +24,8 @@ const TIMING_CONFIG = {
   AUTO_ADVANCE_BUFFER: 800,          // ms after speech ends (fallback)
   SPEECH_PROGRESS_THRESHOLD: 0.4,     // Wait until 40% of speech is done
   SPEECH_PROGRESS_TIMEOUT: 2000,      // Fallback timeout (ms)
+  WHITEBOARD_FIRST_DELAY: 1000,      // ms before first whiteboard line (after speech threshold)
+  WHITEBOARD_STAGGER_DELAY: 900,     // ms between whiteboard lines
 }
 
 const PAUSE_DURATIONS = {
@@ -172,8 +174,7 @@ export function useTimelineController({
     const step = steps[stepIndex]
     console.log('Executing step', stepIndex, step)
 
-    // Set whiteboard lines and camera immediately (no delay needed)
-    setWhiteboardLines(prev => [...prev, ...(step.whiteboardLines ?? [])])
+    // Set camera immediately (no delay needed)
     if (step.cameraTarget) setCameraTarget(step.cameraTarget)
     else setCameraTarget(null)
 
@@ -188,20 +189,34 @@ export function useTimelineController({
     // Execute actions progressively after speech starts
     audioTimingPromise.then(async (audioTiming) => {
       const actions = step.actions ?? [];
+      const whiteboardLines = step.whiteboardLines ?? [];
       
-      if (actions.length === 0) {
-        // No actions, just set up auto-advance (on first step steps.length may be 1 while rest stream in)
-        const hasNext = stepIndex + 1 < steps.length || steps.length === 1;
-        setupAutoAdvance(audioTiming.estimatedDuration, step.pauseDuration, hasNext);
-        return;
-      }
-
-      // Wait for speech to reach progress threshold before starting actions
+      // Wait for speech to reach progress threshold before starting actions/whiteboard lines
       await waitForSpeechProgress(
         audioRef.current,
         TIMING_CONFIG.SPEECH_PROGRESS_THRESHOLD,
         TIMING_CONFIG.SPEECH_PROGRESS_TIMEOUT
       );
+
+      // Stagger whiteboard lines
+      whiteboardLines.forEach((line, index) => {
+        const delay = TIMING_CONFIG.WHITEBOARD_FIRST_DELAY + (index * TIMING_CONFIG.WHITEBOARD_STAGGER_DELAY);
+        const timer = setTimeout(() => {
+          setWhiteboardLines(prev => [...prev, line]);
+        }, delay);
+        actionTimersRef.current.push(timer);
+      });
+      
+      if (actions.length === 0) {
+        // No actions, just set up auto-advance (on first step steps.length may be 1 while rest stream in)
+        const lastWhiteboardDelay = whiteboardLines.length > 0 
+          ? TIMING_CONFIG.WHITEBOARD_FIRST_DELAY + ((whiteboardLines.length - 1) * TIMING_CONFIG.WHITEBOARD_STAGGER_DELAY)
+          : 0;
+        const totalStepDuration = Math.max(audioTiming.estimatedDuration, lastWhiteboardDelay);
+        const hasNext = stepIndex + 1 < steps.length || steps.length === 1;
+        setupAutoAdvance(totalStepDuration, step.pauseDuration, hasNext);
+        return;
+      }
 
       // Pre-calculate IDs that will be added/updated for attention states
       const addedIds: string[] = [];
@@ -259,7 +274,10 @@ export function useTimelineController({
 
       // Set up auto-advance based on audio duration (on first step steps.length may be 1 while rest stream in)
       const lastActionDelay = TIMING_CONFIG.BASE_DELAY + ((actions.length - 1) * TIMING_CONFIG.STAGGER_DELAY);
-      const totalStepDuration = Math.max(audioTiming.estimatedDuration, lastActionDelay);
+      const lastWhiteboardDelay = whiteboardLines.length > 0 
+        ? TIMING_CONFIG.WHITEBOARD_FIRST_DELAY + ((whiteboardLines.length - 1) * TIMING_CONFIG.WHITEBOARD_STAGGER_DELAY)
+        : 0;
+      const totalStepDuration = Math.max(audioTiming.estimatedDuration, lastActionDelay, lastWhiteboardDelay);
       const hasNext = stepIndex + 1 < steps.length || steps.length === 1;
       setupAutoAdvance(totalStepDuration, step.pauseDuration, hasNext);
     }).catch((error) => {
@@ -268,6 +286,12 @@ export function useTimelineController({
       const actions = step.actions ?? [];
       const addedIds: string[] = [];
       const updatedIds: string[] = [];
+      
+      // Fallback: add whiteboard lines immediately if audio fails
+      const whiteboardLines = step.whiteboardLines ?? [];
+      if (whiteboardLines.length > 0) {
+        setWhiteboardLines(prev => [...prev, ...whiteboardLines]);
+      }
       
       for (const action of actions) {
         switch (action.type) {
