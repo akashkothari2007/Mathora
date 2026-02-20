@@ -216,6 +216,7 @@ export const OutlineStepSchema = z.object({
   subtitle: CleanedString,
   visualGoal: CleanedString,
   whiteboardGoal: CleanedString.optional(),
+  cameraTarget: CameraTargetSchema.optional(),
   pauseDuration: z.enum(["short", "medium", "long"]).optional(),
 });
 export type OutlineStep = z.infer<typeof OutlineStepSchema>;

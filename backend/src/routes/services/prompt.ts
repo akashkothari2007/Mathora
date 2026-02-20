@@ -53,6 +53,11 @@ ${stepWhiteboardGoal}
 `
     : "";
 
+  const cameraNote =
+    stepInfo?.cameraTarget != null
+      ? "\nCamera for this step is set by the outline; do not output cameraTarget."
+      : "";
+
   return `
 
 You are generating step ${stepNumber + 1} of ${outline.length}.
@@ -67,7 +72,7 @@ THIS STEP'S VISUAL GOAL (exactly what to do on the graph this step — match thi
 ${stepVisualGoal}
 """${whiteboardBlock}
 
-Your job: (1) Output the graph actions (and optional cameraTarget) that fulfill the visual goal above. (2) Output speakSubtitle: the spoken version of THIS STEP'S NARRATION above — same content but in words you would say aloud for text-to-speech. Convert any math notation to spoken form (e.g. x^2 → "x squared", 9-(x+2)² → "9 minus the quantity x plus 2, squared"; use "quantity" for grouping so it's unambiguous when heard). If the narration has no math notation, speakSubtitle can equal it. Do NOT generate a new subtitle; use the narration given. Do only what this step asks: e.g. if the goal says "add nothing", return empty actions; if it says "add the function", add the function; if it says "update the secant", update the existing secant. Build on objects from previous steps; do not re-add what is already there unless the goal says to replace it.
+Your job: (1) Output the graph actions (and optional cameraTarget unless the outline set it for this step) that fulfill the visual goal above. (2) Output speakSubtitle: the spoken version of THIS STEP'S NARRATION above — same content but in words you would say aloud for text-to-speech.${cameraNote} Convert any math notation to spoken form (e.g. x^2 → "x squared", 9-(x+2)² → "9 minus the quantity x plus 2, squared"; use "quantity" for grouping so it's unambiguous when heard). If the narration has no math notation, speakSubtitle can equal it. Do NOT generate a new subtitle; use the narration given. Do only what this step asks: e.g. if the goal says "add nothing", return empty actions; if it says "add the function", add the function; if it says "update the secant", update the existing secant. Build on objects from previous steps; do not re-add what is already there unless the goal says to replace it.
 
 CURRENT GRAPH: ${currentGraphText}
 
@@ -155,7 +160,7 @@ export function buildOutlinePrompt(userQuestion: string) {
 You are writing a short lesson outline. The outline is the single source of truth: cohesive story, great explanations, and clear instructions for what to draw each step. A later step generator will receive ONLY your visualGoal and a short "current graph" summary — so your visualGoal must be specific and use consistent object ids.
 
 Return ONLY valid JSON:
-{ "outline": [ { "subtitle": string, "visualGoal": string, "whiteboardGoal": string (optional), "pauseDuration": "short" | "medium" | "long" }, ... ] }
+{ "outline": [ { "subtitle": string, "visualGoal": string, "whiteboardGoal": string (optional), "cameraTarget": { "center": [x,y,0], "width" or "height" (optional) } (optional), "pauseDuration": "short" | "medium" | "long" }, ... ] }
 
 ---
 
@@ -191,16 +196,25 @@ VISUAL GOAL (what to draw this step only — the step generator gets only this a
 - Prefer "update" for smooth transitions (e.g. "Update sec1 so the two points are closer.") instead of remove + add.
 - Everything you solve or compute must be drawn: derivative → graph it; critical points x = -1, 1 → add points or labels at those x. The user learns by seeing every step on the graph.
 - Last step: show the full result (e.g. area shaded, points and labels in place, final formula visible). Complete and accurate so a user unfamiliar with the topic can follow.
+- Conceptual lessons: For "what is the vertex", "explain the derivative", etc., do not add area shading unless the lesson is specifically about area. For a final recap step, prefer "Add nothing." or "Keep graph as is" instead of adding objects that don't support the main idea.
+- Labels: Keep label text short and readable (e.g. "Vertex" or "(-2, 9)"); avoid long sentences.
 
 ---
 
-WHITEBOARD / EQUATION-SOLVING (use whiteboardGoal when the lesson is about solving equations or algebra-heavy)
-- For "solve ..." or algebra-heavy questions (e.g. "solve x^2 - 3x - 4 = 0", "use the quadratic formula"), plan steps so the main teaching is on the whiteboard: one or two equations per step (e.g. step 1: write the equation; step 2: substitute into formula; step 3: simplify discriminant; step 4: roots).
-- Use whiteboardGoal to describe exactly what to show on the whiteboard this step. Use visualGoal for graph-only work, or "Add nothing." when the step is purely algebra.
-- When a step has a whiteboardGoal, the step generator will output whiteboardLines in LaTeX to fulfill it. Do not dump the whole solution in one step — spread it over several steps with 1–2 equations each.
-- Example (average rate of change): show rise and run with labels, then the ratio; complete the lesson with the example and numbers on the graph.
+WHITEBOARD (use whiteboardGoal whenever showing the equation or a key formula would help)
+- Equation-solving: For "solve ..." or algebra-heavy questions, plan steps with whiteboardGoal — one or two equations per step (e.g. step 1: write the equation; step 2: substitute into formula; step 3: roots).
+- Conceptual / function lessons: When the lesson explains a function, vertex, derivative meaning, etc., use whiteboardGoal to show the equation or key formula when you first introduce it. E.g. the step that adds f1 for y = 9 - (x+2)^2 can have whiteboardGoal: "Show the equation y = 9 - (x+2)^2". Use whiteboard whenever showing the formula on the side would help; not only for "solve ...".
+- Use visualGoal for graph work; use "Add nothing." when the step is purely algebra. When introducing an equation, consider adding a whiteboardGoal for that step so the equation appears on the side.
+- When a step has a whiteboardGoal, the step generator outputs whiteboardLines in LaTeX. Do not dump the whole solution in one step — 1–2 equations per step.
 
 Object types: function (f1), point (pt1), label (lbl1), line (ln1), secantLine (sec1), slidingTangent (tan1), area (area1).
+
+---
+
+CAMERA (optional per step — frame the view)
+- Any step can include optional cameraTarget to control how the graph is framed. The system fits the view from center and/or width/height.
+- center: [x, y, 0] (e.g. vertex at (-2, 9) → center: [-2, 9, 0]). Optionally width (horizontal span) or height (vertical span) to zoom (e.g. height: 6 to focus on the vertex region).
+- Examples: Zoom to vertex → {"center": [-2, 9, 0], "height": 6}. Wide view → {"center": [0, 0, 0], "width": 10}. Omit cameraTarget for default view.
 
 ---
 
@@ -237,6 +251,13 @@ Example for "Solve x^2 - 3x - 4 = 0" (equation-solving: use whiteboardGoal; keep
   { "subtitle": "We use the quadratic formula: x equals negative b plus or minus the square root of b squared minus 4ac, all over 2a. Here a is 1, b is minus 3, and c is minus 4.", "visualGoal": "Add nothing.", "whiteboardGoal": "Show the quadratic formula with a=1, b=-3, c=-4 substituted in", "pauseDuration": "long" },
   { "subtitle": "Under the square root we get b squared minus 4ac: that's 9 plus 16, which is 25.", "visualGoal": "Add nothing.", "whiteboardGoal": "Show discriminant: b^2 - 4ac = 9 + 16 = 25", "pauseDuration": "medium" },
   { "subtitle": "So x is 3 plus or minus 5 over 2. That gives x equals 4 or x equals minus 1. We're done.", "visualGoal": "Add f1 (y = x^2 - 3*x - 4). Add pt1 and pt2 at roots (4,0) and (-1,0). Add lbl1 and lbl2.", "whiteboardGoal": "Show x = (3 ± 5)/2 and final roots x = 4, x = -1", "pauseDuration": "medium" }
+]
+
+Example for "Explain the vertex of 9 - (x+2)^2" (conceptual: whiteboardGoal shows equation; cameraTarget zooms to vertex; no area unless about area):
+[
+  { "subtitle": "Let's explore the vertex of y = 9 - (x+2)^2. The vertex is where the parabola turns — its maximum or minimum.", "visualGoal": "Add nothing.", "pauseDuration": "medium" },
+  { "subtitle": "We can read the vertex from the form: the vertex is at (-2, 9). Here's the graph and the equation.", "visualGoal": "Add f1 (y = 9 - (x+2)^2). Add pt1 at (-2, 9).", "whiteboardGoal": "Show the equation y = 9 - (x+2)^2", "cameraTarget": { "center": [-2, 9, 0], "height": 6 }, "pauseDuration": "medium" },
+  { "subtitle": "The vertex (-2, 9) is the maximum: the parabola opens down, so 9 is the highest value.", "visualGoal": "Add lbl1 at vertex with text 'Vertex (-2, 9)'.", "pauseDuration": "medium" }
 ]
 4–7 steps is fine; may vary by topic.
 

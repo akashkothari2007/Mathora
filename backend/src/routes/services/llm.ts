@@ -103,7 +103,7 @@ export async function generateStep(
         speakSubtitle: parsed.speakSubtitle ?? subtitleFromOutline ?? "",
         pauseDuration: pauseDurationFromOutline,
         actions: parsed.actions ?? [],
-        cameraTarget: parsed.cameraTarget ?? undefined,
+        cameraTarget: outline[step_number]?.cameraTarget ?? parsed.cameraTarget ?? undefined,
         whiteboardLines: stepWhiteboardLines ?? undefined,
       };
       StepSchema.parse(step);
