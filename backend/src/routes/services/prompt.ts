@@ -157,7 +157,6 @@ SUBTITLE (the main teaching content — 3–5 sentences the user will see and re
 - Use analogies and "what if we..." so it feels like a conversation. One main idea per step.
 - Natural, friendly tone. Make the intuition crystal clear; then the math follows.
 - No jargon dumps. If you use a term, briefly say what it means.
-- Readability: write so it can be read aloud; avoid long strings of symbols. Prefer "x squared" in prose when possible; keep notation minimal so TTS and the reader can follow.
 - Correctness: every number or formula you state in the subtitle must appear on the graph in that step or a prior step (e.g. if you say "we get x = 2", there must be a point or label at x = 2). Do not state an answer without showing it visually.
 
 ---
