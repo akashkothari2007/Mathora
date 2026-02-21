@@ -186,7 +186,7 @@ interface CharData {
     jitter: number
 }
 
-export default function Label2D({ text, position, color = 'white', fontSize = 0.3 }: Label2DProps) {
+export default function Label2D({ text, position, color = 'white', fontSize = 0.38 }: Label2DProps) {
     const startTime = useRef<number | null>(null)
     const prevText = useRef('')
     const [charData, setCharData] = useState<CharData[] | null>(null)
@@ -269,7 +269,7 @@ export default function Label2D({ text, position, color = 'white', fontSize = 0.
             if (strokeProgress > 0.001 && cd.pathLength > 0) {
                 ctx.save()
                 ctx.strokeStyle = color
-                ctx.lineWidth = 1.5
+                ctx.lineWidth = 2.5
                 ctx.lineJoin = 'round'
                 ctx.lineCap = 'round'
                 const offset = cd.pathLength * (1 - strokeProgress)
