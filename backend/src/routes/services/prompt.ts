@@ -88,33 +88,35 @@ GUIDELINES:
 - Remove or update when it helps the story (e.g. remove old points when highlighting a new one).
 - Don't add decoration. Every object should support the explanation.
 
+PALETTE — USE ONLY purple #a855f7, green #22c55e, blue #60a5fa, red #ef4444. Points: yellow #eab308 only. Labels: color must match the object they're labeling (e.g. label for blue curve → blue; label for yellow point → yellow).
+
 OBJECT TYPES AND PROPS (numbers must be bare, not strings):
 
-function — graph y = f(x). Optional: xmin, xmax (default -5..5), color, lineWidth.
-  add: {"type":"add","object":{"id":"f1","type":"function","props":{"f":"x*x","color":"#4ade80"}}}
+function — graph y = f(x). Optional: xmin, xmax (default -5..5), color, lineWidth. Use only purple, green, blue, or red.
+  add: {"type":"add","object":{"id":"f1","type":"function","props":{"f":"x*x","color":"#22c55e"}}}
 
-point — dot at (x,y). Optional: color, size. Can animate or follow a function.
-  add: {"type":"add","object":{"id":"pt1","type":"point","props":{"position":{"x":1,"y":1},"color":"red"}}}
+point — dot at (x,y). Optional: color, size. Can animate or follow a function. Points: yellow only.
+  add: {"type":"add","object":{"id":"pt1","type":"point","props":{"position":{"x":1,"y":1},"color":"#eab308"}}}
   point that moves along f from startX to endX over duration seconds:
   {"type":"add","object":{"id":"pt1","type":"point","props":{"position":{"x":0,"y":0},"followFunction":{"f":"x*x","startX":-2,"endX":2,"duration":3}}}}
   point that animates to a new position:
   {"type":"add","object":{"id":"pt1","type":"point","props":{"position":{"x":0,"y":0},"animateTo":{"x":2,"y":4},"animateDuration":1.5}}}
   update position: {"type":"update","id":"pt1","props":{"position":{"x":2,"y":4}}}
 
-label — text at (x,y). Optional: color
-  {"type":"add","object":{"id":"lbl1","type":"label","props":{"text":"slope here","position":{"x":1,"y":1}}}}
+label — text at (x,y). Color must match the object it labels (e.g. label for blue curve → #60a5fa; label for yellow point → #eab308).
+  {"type":"add","object":{"id":"lbl1","type":"label","props":{"text":"slope here","position":{"x":1,"y":1},"color":"#60a5fa"}}}
 
-slidingTangent — tangent line that slides along f from startX to endX. Optional: duration, xmin, xmax, color, lineWidth.
-  {"type":"add","object":{"id":"tan1","type":"slidingTangent","props":{"f":"x*x","startX":-2,"endX":2,"duration":2}}}
+slidingTangent — tangent line that slides along f from startX to endX. Optional: duration, xmin, xmax, color, lineWidth. Use only purple, green, blue, or red.
+  {"type":"add","object":{"id":"tan1","type":"slidingTangent","props":{"f":"x*x","startX":-2,"endX":2,"duration":2,"color":"#60a5fa"}}}
 
-secantLine — line through (startX, f(startX)) and (endX, f(endX)); good for "average rate" then limit. Optional: extension, color, lineWidth, pointSize.
+secantLine — line through (startX, f(startX)) and (endX, f(endX)); good for "average rate" then limit. Optional: extension, color, lineWidth, pointSize. Use only purple, green, blue, or red.
   {"type":"add","object":{"id":"sec1","type":"secantLine","props":{"f":"x*x","startX":-1,"endX":2}}}
   update: {"type":"update","id":"sec1","props":{"startX":0.5,"endX":1.5}}
 
-line — straight segment from start to end. Optional: color, lineWidth.
-  {"type":"add","object":{"id":"ln1","type":"line","props":{"start":{"x":0,"y":0},"end":{"x":2,"y":1},"color":"white"}}}
+line — straight segment from start to end. Optional: color, lineWidth. Use only purple, green, blue, or red.
+  {"type":"add","object":{"id":"ln1","type":"line","props":{"start":{"x":0,"y":0},"end":{"x":2,"y":1},"color":"#60a5fa"}}}
 
-area — shaded region under f (and optionally between g and f). Required: xmin, xmax. Optional: g, color, opacity, steps.
+area — shaded region under f (and optionally between g and f). Required: xmin, xmax. Optional: g, color, opacity, steps. Use only purple, green, blue, or red.
   {"type":"add","object":{"id":"area1","type":"area","props":{"f":"x*x","xmin":0,"xmax":2,"color":"#22c55e","opacity":0.4}}}
 
 REMOVE:

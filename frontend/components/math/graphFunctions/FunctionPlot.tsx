@@ -18,6 +18,7 @@ export type FunctionPlotProps = {
 }
 
 const MORPH_DURATION = 0.4
+const DRAW_DURATION = 1.2
 
 function samplePoints(f: (x: number) => number, xmin: number, xmax: number, steps: number) {
   const arr: THREE.Vector3[] = []
@@ -89,7 +90,7 @@ export default function FunctionPlot({
     // 1) draw in
     if (!drawFinished) {
       setVisibleCount(prev => {
-        const speed = steps
+        const speed = steps / DRAW_DURATION
         const next = prev + speed * delta
         if (next >= steps) setDrawFinished(true)
         return Math.min(next, steps)
