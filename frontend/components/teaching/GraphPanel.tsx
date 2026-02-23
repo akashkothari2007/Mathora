@@ -15,17 +15,17 @@ import Line2D from "../math/graphFunctions/Line2D";
 import SlidingTangent from "../math/graphFunctions/slidingTangent";
 import SecantLine from "../math/graphFunctions/SecantLine";
 import { GraphObject } from "../math/types/graphObject";
-import { Step } from "../math/types/steps";
 import { CameraTarget } from "../math/types/cameraTarget";
+import type { SceneConfig } from "../math/types/sceneConfig";
 
 type Props = {
     graphObjects: GraphObject[]
     cameraTarget: CameraTarget | null
-
+    sceneConfig: SceneConfig | null
 }
 
 
-export default function GraphPanel({graphObjects, cameraTarget}: Props) {
+export default function GraphPanel({ graphObjects, cameraTarget, sceneConfig }: Props) {
  
 
 
@@ -33,7 +33,7 @@ export default function GraphPanel({graphObjects, cameraTarget}: Props) {
         <div className = "w-full h-full">
            
             
-            <MathScene cameraTarget={cameraTarget} >
+            <MathScene cameraTarget={cameraTarget} sceneConfig={sceneConfig}>
             <>
             {graphObjects.map(obj => {
                 switch (obj.type) {

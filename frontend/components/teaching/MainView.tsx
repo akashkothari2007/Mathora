@@ -7,6 +7,8 @@ import { CameraTarget } from '../math/types/cameraTarget'
 import { useTimelineController } from '../math/timeline/TimelineController'
 import ControlsContainer from './ControlsContainer'
 import WhiteboardPanel from './WhiteboardPanel'
+import { DEFAULT_SCENE_CONFIG } from '../math/types/sceneConfig'
+import type { SceneConfig } from '../math/types/sceneConfig'
 
 type Props = {
     showGraph: boolean
@@ -27,20 +29,20 @@ export default function MainView({
 
         //all animations states etc
 
-        const [graphObjects, setGraphObjects] = useState<GraphObject[]>([]) //graph objects
-        const [cameraTarget, setCameraTarget] = useState<CameraTarget | null>(null)   //camera target  
-        const [stepIndex, setStepIndex] = useState(0) //cur index
-        const executed = useRef<Set<number>>(new Set()) //what has been executed so far
+        const [graphObjects, setGraphObjects] = useState<GraphObject[]>([])
+        const [cameraTarget, setCameraTarget] = useState<CameraTarget | null>(null)
+        const [stepIndex, setStepIndex] = useState(0)
+        const executed = useRef<Set<number>>(new Set())
+        const [whiteboardLines, setWhiteboardLines] = useState<string[]>([])
+        const defaultSceneConfig: SceneConfig = DEFAULT_SCENE_CONFIG
+        const [sceneConfig, setSceneConfig] = useState<SceneConfig | null>(defaultSceneConfig)
 
-        // add whiteboard funcs here
-        const [whiteboardLines, setWhiteboardLines] = useState<string[]>([]) //latex lines
-
-        // reset all animations, set everything to initial state
         const reset = () => {
             executed.current.clear()
             setGraphObjects([])
             setCameraTarget(null)
             setWhiteboardLines([])
+            setSceneConfig(defaultSceneConfig)
             setStepIndex(-1)
             requestAnimationFrame(() => {
                 setStepIndex(0)
@@ -49,9 +51,9 @@ export default function MainView({
 
         
         // use timeline controller to handle the timeline
-        useTimelineController({steps, setGraphObjects, setSubtitle, setCameraTarget, stepIndex, setStepIndex, executed, setWhiteboardLines})
+        useTimelineController({ steps, setGraphObjects, setSubtitle, setCameraTarget, stepIndex, setStepIndex, executed, setWhiteboardLines, setSceneConfig })
         const panels = [
-        showGraph && <GraphPanel key = "graph" graphObjects={graphObjects} cameraTarget={cameraTarget} />,
+        showGraph && <GraphPanel key="graph" graphObjects={graphObjects} cameraTarget={cameraTarget} sceneConfig={sceneConfig} />,
         showWhiteboard && <WhiteboardPanel key = "whiteboard" whiteboardLines={whiteboardLines} />,
         showExplanation && <Panel key = "explanation" title = "Explanation" />,
     ].filter(Boolean)

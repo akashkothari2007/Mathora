@@ -12,6 +12,38 @@ dotenv.config();
 const API_KEY = process.env.DEEPSEEK_API_KEY;
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
+type OutlineSceneCondensed = {
+  mode: "axes" | "unitCircle";
+  axes?: {
+    labels?: boolean;
+    tickSpacing?: number;
+  };
+  unitCircle?: {
+    labels?: boolean;
+    units?: "degrees" | "radians";
+  };
+};
+
+function expandOutlineScene(condensed: OutlineSceneCondensed): Step["sceneConfig"] {
+  if (condensed.mode === "axes") {
+    const axes = condensed.axes ?? {};
+    return {
+      mode: "axes",
+      axes: {
+        labels: axes.labels ?? true,
+        tickSpacing: axes.tickSpacing ?? 1,
+      },
+    };
+  }
+  const unit = condensed.unitCircle ?? {};
+  return {
+    mode: "unitCircle",
+    unitCircle: {
+      labels: unit.labels ?? false,
+      units: unit.units ?? "degrees",
+    },
+  };
+}
 
 const fallbackStep: Step = {
   subtitle: "Unable to generate this step.",
@@ -105,6 +137,7 @@ export async function generateStep(
         actions: parsed.actions ?? [],
         cameraTarget: outline[step_number]?.cameraTarget ?? parsed.cameraTarget ?? undefined,
         whiteboardLines: stepWhiteboardLines ?? undefined,
+        sceneConfig: outline[step_number]?.scene != null ? expandOutlineScene(outline[step_number].scene as OutlineSceneCondensed) : undefined,
       };
       StepSchema.parse(step);
       return step;

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Step } from '../types/steps'
 import { GraphObject } from '../types/graphObject'
 import { CameraTarget } from '../types/cameraTarget'
+import type { SceneConfig } from '../types/sceneConfig'
 import { handleSubtitle } from './handleSubtitle'
 import { applyAttention } from './ActionManager'
 
@@ -16,6 +17,7 @@ type UseTimelineControllerProps = {
   setCameraTarget: React.Dispatch<React.SetStateAction<CameraTarget | null>>
   executed: React.RefObject<Set<number>>
   setWhiteboardLines: React.Dispatch<React.SetStateAction<string[]>>
+  setSceneConfig?: React.Dispatch<React.SetStateAction<SceneConfig | null>>
 }
 
 const TIMING_CONFIG = {
@@ -43,6 +45,7 @@ export function useTimelineController({
   setStepIndex,
   executed,
   setWhiteboardLines,
+  setSceneConfig,
 }: UseTimelineControllerProps) {
   
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -177,6 +180,11 @@ export function useTimelineController({
     // Set camera immediately (no delay needed)
     if (step.cameraTarget) setCameraTarget(step.cameraTarget)
     else setCameraTarget(null)
+
+    // Set scene config when step specifies it
+    if (setSceneConfig && step.sceneConfig != null) {
+      setSceneConfig(step.sceneConfig)
+    }
 
     // Start speech and get audio timing info
     const audioTimingPromise = handleSubtitle({
@@ -330,7 +338,7 @@ export function useTimelineController({
       actionTimersRef.current = [];
     };
     
-  }, [stepIndex, steps, setGraphObjects, setSubtitle, setCameraTarget, setWhiteboardLines, setStepIndex])
+  }, [stepIndex, steps, setGraphObjects, setSubtitle, setCameraTarget, setWhiteboardLines, setStepIndex, setSceneConfig])
 
   
   // cleanup audio when component unmounts

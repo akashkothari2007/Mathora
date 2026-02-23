@@ -31,6 +31,44 @@ const CameraTargetSchema = z.object({
   height: z.number().optional(),
 }).strict();
 
+/** Condensed scene config from outline: mode + small options object. Backend passes this through to the frontend. */
+const OutlineSceneSchema = z
+  .object({
+    mode: z.enum(["axes", "unitCircle"]),
+    axes: z
+      .object({
+        labels: z.boolean().optional(),
+        tickSpacing: z.number().optional(),
+      })
+      .optional(),
+    unitCircle: z
+      .object({
+        labels: z.boolean().optional(),
+        units: z.enum(["degrees", "radians"]).optional(),
+      })
+      .optional(),
+  })
+  .strict();
+
+/** Scene config attached to each step; matches the frontend SceneConfig shape. */
+const SceneConfigSchema = z
+  .object({
+    mode: z.enum(["axes", "unitCircle"]),
+    axes: z
+      .object({
+        labels: z.boolean().optional(),
+        tickSpacing: z.number().optional(),
+      })
+      .optional(),
+    unitCircle: z
+      .object({
+        labels: z.boolean().optional(),
+        units: z.enum(["degrees", "radians"]).optional(),
+      })
+      .optional(),
+  })
+  .strict();
+
 const PointPropsSchema = z.object({
   position: z.object({
     x: z.number(),
@@ -197,6 +235,7 @@ export const StepSchema = z.object({
   cameraTarget: CameraTargetSchema.nullable().optional(),
   actions: z.array(ActionSchema).optional(),
   whiteboardLines: z.array(z.string()).optional(),
+  sceneConfig: SceneConfigSchema.optional(),
 });
 
 /** AI returns actions + optional cameraTarget + optional speakSubtitle + optional whiteboardLines; we inject subtitle from outline. */
@@ -217,6 +256,7 @@ export const OutlineStepSchema = z.object({
   visualGoal: CleanedString,
   whiteboardGoal: CleanedString.optional(),
   cameraTarget: CameraTargetSchema.optional(),
+  scene: OutlineSceneSchema.optional(),
   pauseDuration: z.enum(["short", "medium", "long"]).optional(),
 });
 export type OutlineStep = z.infer<typeof OutlineStepSchema>;

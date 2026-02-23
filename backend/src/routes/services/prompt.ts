@@ -162,7 +162,7 @@ export function buildOutlinePrompt(userQuestion: string) {
 You are writing a short lesson outline. The outline is the single source of truth: cohesive story, great explanations, and clear instructions for what to draw each step. A later step generator will receive ONLY your visualGoal and a short "current graph" summary — so your visualGoal must be specific and use consistent object ids.
 
 Return ONLY valid JSON:
-{ "outline": [ { "subtitle": string, "visualGoal": string, "whiteboardGoal": string (optional), "cameraTarget": { "center": [x,y,0], "width" or "height" (optional) } (optional), "pauseDuration": "short" | "medium" | "long" }, ... ] }
+{ "outline": [ { "subtitle": string, "visualGoal": string, "whiteboardGoal": string (optional), "cameraTarget": { "center": [x,y,0], "width" or "height" (optional) } (optional), "scene": { "mode": "axes" | "unitCircle", "axes": { "labels": boolean (optional), "tickSpacing": number (optional) } (optional), "unitCircle": { "labels": boolean (optional), "units": "degrees" | "radians" (optional) } (optional) } (optional), "pauseDuration": "short" | "medium" | "long" }, ... ] }
 
 ---
 
@@ -218,6 +218,18 @@ CAMERA (optional per step — frame the view)
 - Any step can include optional cameraTarget to control how the graph is framed. The system fits the view from center and/or width/height.
 - center: [x, y, 0] (e.g. vertex at (-2, 9) → center: [-2, 9, 0]). Optionally width (horizontal span) or height (vertical span) to zoom (e.g. height: 6 to focus on the vertex region).
 - Examples: Zoom to vertex → {"center": [-2, 9, 0], "height": 6}. Wide view → {"center": [0, 0, 0], "width": 10}. Omit cameraTarget for default view.
+
+---
+
+SCENE (reference: axes / unit circle — optional per step)
+- The outline controls what reference is shown: only one of **axes** (grid with labels) or **unit circle** (faded circle with angles) is active at a time.
+- **First step:** Prefer setting \`scene\` to choose the reference for the whole lesson: \`axes\` (default) or \`unitCircle\`. For trig/angle lessons use \`unitCircle\` (often on the first step). For most algebra/graph lessons use \`axes\` or omit.
+- **Later steps:** Only add \`scene\` if the lesson needs to **switch** (e.g. switch to unit circle for trig). Most steps should omit \`scene\` so the first step's choice persists.
+- Format: \`"scene": { "mode": "axes" | "unitCircle" }\`. Optional nested options:
+  - Axes mode: \`"axes": { "labels": boolean (optional), "tickSpacing": number (optional) }\` where labels controls whether numeric labels and axis labels appear; tickSpacing controls spacing between ticks/labels (defaults to 1).
+  - Unit circle mode: \`"unitCircle": { "labels": boolean (optional), "units": "degrees" | "radians" (optional) }\` where labels controls whether angle labels are shown on the circle; units controls whether those labels are shown in degrees or radians (defaults to degrees).
+- Extents, grid size, and fading are automatic in the frontend; do NOT try to set axis ranges or circle radius — just choose mode and these simple options.
+- Examples: \`"scene": { "mode": "axes" }\` (default grid). \`"scene": { "mode": "axes", "axes": { "labels": false } }\` (axes with ticks but no labels). \`"scene": { "mode": "unitCircle", "unitCircle": { "labels": true, "units": "degrees" } }\`.
 
 ---
 

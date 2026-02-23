@@ -17,7 +17,6 @@ export const pointAndLabelTestTimeline: Step[] = [
           props: {
             position: { x: 0, y: 0 },
             color: "white",
-            size: 0.06,
           },
         },
       },
