@@ -186,6 +186,14 @@ interface CharData {
     jitter: number
 }
 
+export function estimateLabelSize(text: string, fontSize?: number) {
+    const fs = fontSize ?? 0.38
+    const height = fs
+    const approxPerChar = 0.38 * fs
+    const width = Math.max(fs * 0.6, text.length * approxPerChar)
+    return { width, height }
+}
+
 export default function Label2D({ text, position, color = 'white', fontSize = 0.38 }: Label2DProps) {
     const startTime = useRef<number | null>(null)
     const prevText = useRef('')
