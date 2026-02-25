@@ -166,19 +166,26 @@ export default function SubtitleChatPanel({
 
   return (
     <div
-      className="flex flex-col w-full h-full min-h-0"
-      style={{ background: "radial-gradient(ellipse 90% 80% at 50% 30%, #27272a 0%, #18181b 50%, #0f0f10 100%)" }}
+      className="flex flex-col w-full h-full min-h-0 relative"
+      style={{
+        background: `
+          radial-gradient(circle at 50% 50%, rgba(255,255,255,0.008) 1px, transparent 1px),
+          radial-gradient(ellipse 100% 90% at 50% 40%, #252528 0%, #1a1a1d 45%, #111113 100%)
+        `,
+        backgroundSize: "32px 32px, 100% 100%",
+        backgroundPosition: "0 0, 0 0",
+      }}
     >
       <div
         ref={scrollContainerRef}
-        className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-6 py-7"
+        className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-6 py-8"
       >
-        <div className="flex flex-col gap-6 max-w-2xl">
+        <div className="flex flex-col gap-7 max-w-2xl relative pl-6 border-l border-zinc-600/50">
           {/* User question — very subtle */}
           {hasPrompt && (
             <div className="flex justify-end">
               <div
-                className="rounded-xl px-3.5 py-2.5 bg-zinc-800/30 border border-zinc-700/20 text-zinc-500 text-[14px] leading-relaxed max-w-[85%]"
+                className="rounded-xl px-3.5 py-2.5 bg-zinc-800/25 border border-zinc-700/15 text-zinc-500 text-[14px] leading-relaxed max-w-[85%]"
                 title={prompt}
               >
                 {prompt.trim()}
@@ -190,11 +197,11 @@ export default function SubtitleChatPanel({
             <div key={i} className="flex gap-4">
               {block.type === "subtitle" && block.text.length > 0 && (
                 <>
-                  <div className="shrink-0 w-9 h-9 rounded-full bg-zinc-600 flex items-center justify-center text-zinc-200 text-sm font-medium">
+                  <div className="shrink-0 w-9 h-9 rounded-full bg-zinc-700/60 flex items-center justify-center text-zinc-300 text-[13px] font-medium">
                     M
                   </div>
                   <div className="min-w-0 flex-1 pt-0.5">
-                    <p className="text-[15px] text-zinc-100 leading-[1.6] whitespace-pre-wrap">
+                    <p className="text-[15px] text-zinc-200/95 leading-[1.62] whitespace-pre-wrap">
                       {block.text}
                     </p>
                   </div>
@@ -212,7 +219,7 @@ export default function SubtitleChatPanel({
           ))}
           {/* Current message */}
           <div className="flex gap-4">
-            <div className="shrink-0 w-9 h-9 rounded-full bg-zinc-600 flex items-center justify-center text-zinc-200 text-sm font-medium">
+            <div className="shrink-0 w-9 h-9 rounded-full bg-zinc-700/60 flex items-center justify-center text-zinc-300 text-[13px] font-medium">
               M
             </div>
             <div className="min-w-0 flex-1 pt-0.5">{renderCurrentMessage()}</div>
