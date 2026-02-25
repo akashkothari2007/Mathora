@@ -1,5 +1,7 @@
 import { Action } from "./schema";
 import type { OutlineStep, Step } from "./schema";
+import { derivativeOfXSquaredExample } from "./derivativeExampleOutline";
+import { areaCalculusExampleOutline } from "./areaCalculusExampleOutline";
 
 /** Compact inventory: "f1 (function), pt1 (point), sec1 (secant)" or "None." */
 function formatCurrentGraph(objects: Record<string, NonNullable<Action["object"]>>): string {
@@ -137,18 +139,21 @@ whiteboardLines (optional) — LaTeX strings only. Each line is rendered as math
 - JSON ESCAPING: In JSON, a backslash is escaped. To get one backslash in the string value you must write two backslashes. So for plus-minus you must write \\\\pm in the JSON (the parsed value will be \\pm). Example correct JSON: "whiteboardLines": ["x^2 - 4 = 0", "x = \\\\pm 2"]
 - FORMAT: Each string is one line; they appear in order (staggered).
 
+whiteboardAtIndices (optional) — WHEN you output whiteboardLines, also output whiteboardAtIndices so each equation pops up exactly when the narration says it (like ChatGPT). It must be an array of non-negative integers, same length as whiteboardLines. Each number is the 0-based character index in THIS STEP'S NARRATION (the subtitle above) after which that whiteboard line should appear. CRITICAL: The index must be at the END of a sentence or at least a complete clause — never in the middle of a sentence. So use the index of the character right after the period (or ! or ?) that ends the sentence where the equation is introduced. Example: "Consider the curve y = x². The slope at x = 1 is..." — put whiteboardAtIndices[0] at the position right after the period after "x²" (so the equation appears after the full sentence). Count every character. If you omit whiteboardAtIndices, equations will be spaced evenly.
+
 RULES:
 - All numbers bare: {"x":1,"y":1} not {"x":"1","y":"1"}.
 - Function f: use a string the frontend can eval: "x*x", "Math.sin(x)", "2*x+1".
 - Use 3.14159265359 for pi if needed.
 - LABEL EVERY SINGLE GRAPH USING THE LABEL
 - label whatever is necessary to make it further understandable for the user
-OUTPUT: Only valid JSON, no markdown or backticks. Include speakSubtitle (spoken version of the step narration above). Include whiteboardLines only when this step has calculations or algebra to show (array of LaTeX strings, or omit).
+OUTPUT: Only valid JSON, no markdown or backticks. Include speakSubtitle (spoken version of the step narration above). Include whiteboardLines only when this step has calculations or algebra to show (array of LaTeX strings, or omit). When you include whiteboardLines, also include whiteboardAtIndices (array of character indices in the narration, same length, so each equation appears when the narration reaches that point).
 {
   "actions": [...],
   "cameraTarget": { ... } or omit,
   "speakSubtitle": "string — same as narration but in spoken words, math notation converted",
-  "whiteboardLines": ["latex line 1", "latex line 2"] or omit
+  "whiteboardLines": ["latex line 1", "latex line 2"] or omit,
+  "whiteboardAtIndices": [25, 120] or omit (same length as whiteboardLines; 0-based char index in narration after which each equation appears)
 }
 
 Question: ${JSON.stringify(userQuestion)}
@@ -256,25 +261,12 @@ EXAMPLES (actual 3Blue1Brown transcripts — use as stylistic reference, NOT to 
 - Favor this style: the build-up, depth, pacing, how he doesn't rush to definitions. Notice how he also relates with the user and makes them feel like they're in on the conversation.
 
 Example for "Explain where the idea of area / calculus comes from":
-[
-  { "subtitle": "My goal is for you to come away from this feeling like you could have invented calculus. That is, we'll cover core ideas in a way that makes clear where they actually come from and what they really mean, using an all-around visual approach. Inventing math is no joke — there's a difference between being told why something makes sense and actually generating it from scratch. But at all points I want you to think: if you were an early mathematician pondering these ideas and drawing the right diagrams, does it feel reasonable that you could have stumbled upon these truths yourself?", "visualGoal": "Add nothing.", "pauseDuration": "long" },
-  { "subtitle": "Contemplating this and leaving yourself open to generalizing the tools you use along the way can lead you to a glimpse of three big ideas: integrals, derivatives, and the fact that they are opposites. But the story of finding area starts more simply: just you, and a circle. To be concrete, let's say the radius is 1.", "visualGoal": "Add nothing.", "pauseDuration": "long" },
-  { "subtitle": "If you weren't worried about the exact area and just wanted to estimate it, one way you might go about it is to chop the circle into smaller pieces whose areas are easier to approximate, then add up the results. There are many ways you might go about this, each of which may lead to its own interesting line of reasoning.", "visualGoal": "Add f1 (top half of unit circle, e.g. y = sqrt(1-x*x) for x in [-1,1]). Add area1 under it from x=-1 to x=1.", "pauseDuration": "medium" }
-]
+${JSON.stringify(areaCalculusExampleOutline, null, 2)}
 
-Example for "Explain what a vector is" (linear algebra):
-[
-  { "subtitle": "The fundamental building block for linear algebra is the vector, so it's worth making sure we're all on the same page about what exactly a vector is. Broadly speaking there are three distinct-but-related interpretations of vectors, which I'll call the physics student perspective, the computer science perspective, and the mathematician's perspective.", "visualGoal": "Add nothing.", "pauseDuration": "long" },
-  { "subtitle": "The physics student perspective is that vectors are arrows pointing in space. What defines a given vector is its length and the direction it's pointing, but as long as those two facts are the same you can move it around and it's still the same vector. Vectors that live in a flat plane are two-dimensional, and those sitting in the broader space that we live in are three-dimensional.", "visualGoal": "Add ln1 from (0,0) to (2,1). Add lbl1 with text 'vector'.", "pauseDuration": "medium" },
-  { "subtitle": "While many of you are already familiar with coordinate systems, it's worth walking through them explicitly since this is where all the important back and forth between the two main perspectives of linear algebra happens. Focusing on two dimensions for the moment, you have a horizontal line, called the x-axis, and a vertical line, called the y-axis.", "visualGoal": "Add nothing.", "whiteboardGoal": "Show x-axis and y-axis labels", "pauseDuration": "medium" }
-]
+Example for "Explain the derivative of x²" 
+${JSON.stringify(derivativeOfXSquaredExample, null, 2)}
 
-Example for "Why is a sphere's surface area four times its shadow?":
-[
-  { "subtitle": "But why is a sphere's surface area four times its shadow? Some of you may have seen in school that the surface area of a sphere is 4πR², a suspiciously suggestive formula given that it's a clean multiple of πR², the area of a circle with the same radius.", "visualGoal": "Add nothing.", "pauseDuration": "long" },
-  { "subtitle": "But have you ever wondered why is this true? And I don't just mean proving this 4πR² formula. I mean feeling, viscerally, a connection between the sphere's surface area and those four circles. How lovely would it be if there was some shift in perspective that showed how you could nicely and perfectly fit those four circles onto the sphere's surface?", "visualGoal": "Add nothing.", "pauseDuration": "long" },
-  { "subtitle": "Nothing can be quite that simple, since the curvature of a sphere's surface is different from the curvature of a flat plane, which is why trying to fit paper around a sphere doesn't really work. Nevertheless, I'd like to show you two ways of thinking about the surface area of a sphere which connect it in a satisfying way to four circles of the same radius.", "visualGoal": "Add nothing.", "pauseDuration": "medium" }
-]
+
 
 4–7 steps is fine; may vary by topic.
 

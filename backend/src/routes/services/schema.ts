@@ -235,15 +235,18 @@ export const StepSchema = z.object({
   cameraTarget: CameraTargetSchema.nullable().optional(),
   actions: z.array(ActionSchema).optional(),
   whiteboardLines: z.array(z.string()).optional(),
+  /** 0-based character index in subtitle where each whiteboard line should appear (same order as whiteboardLines). */
+  whiteboardAtIndices: z.array(z.number().int().min(0)).optional(),
   sceneConfig: SceneConfigSchema.optional(),
 });
 
-/** AI returns actions + optional cameraTarget + optional speakSubtitle + optional whiteboardLines; we inject subtitle from outline. */
+/** AI returns actions + optional cameraTarget + optional speakSubtitle + optional whiteboardLines + optional whiteboardAtIndices; we inject subtitle from outline. */
 export const StepGenerationResponseSchema = z.object({
   actions: z.array(ActionSchema).optional(),
   cameraTarget: CameraTargetSchema.nullable().optional(),
   speakSubtitle: CleanedString.optional(),
   whiteboardLines: z.array(z.string()).optional(),
+  whiteboardAtIndices: z.array(z.number().int().min(0)).optional(),
 });
 
 export const TimelineSchema = z.array(StepSchema);

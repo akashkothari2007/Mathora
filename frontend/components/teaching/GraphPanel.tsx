@@ -101,9 +101,7 @@ export default function GraphPanel({ graphObjects, cameraTarget, sceneConfig }: 
 
 
     return (
-        <div className = "w-full h-full">
-           
-            
+        <div className="w-full h-full bg-[#0a0a0a] min-h-0">
             <MathScene cameraTarget={cameraTarget} sceneConfig={sceneConfig}>
             <>
             {layoutLabels(graphObjects).map(obj => {

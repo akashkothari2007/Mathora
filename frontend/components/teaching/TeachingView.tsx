@@ -48,10 +48,12 @@ export default function TeachingView({ prompt, onNewChat }: Props) {
 
         {displayedSteps ? (
           <MainView
+            prompt={prompt}
             showGraph={showGraph}
             showWhiteboard={showWhiteboard}
             showExplanation={showExplanation}
             setSubtitle={setSubtitle}
+            subtitle={subtitle}
             steps={displayedSteps}
             done={displayedDone}
           />
@@ -67,10 +69,6 @@ export default function TeachingView({ prompt, onNewChat }: Props) {
             </div>
           </div>
         )}
-      </div>
-
-      <div className="h-10 text-center text-sm text-neutral-500 border-t border-neutral-800/50">
-        {subtitle}
       </div>
     </div>
   );

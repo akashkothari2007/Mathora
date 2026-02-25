@@ -7,6 +7,11 @@ import { CameraTarget } from '../types/cameraTarget'
 import type { SceneConfig } from '../types/sceneConfig'
 import { handleSubtitle } from './handleSubtitle'
 import { applyAttention } from './ActionManager'
+import { buildBlocksForCompletedStep } from '../../teaching/chatBlockUtils'
+
+export type ChatBlock =
+  | { type: 'subtitle'; text: string }
+  | { type: 'whiteboard'; latex: string }
 
 type UseTimelineControllerProps = {
   steps: Step[]
@@ -14,6 +19,9 @@ type UseTimelineControllerProps = {
   setStepIndex: React.Dispatch<React.SetStateAction<number>>
   setGraphObjects: React.Dispatch<React.SetStateAction<GraphObject[]>>
   setSubtitle: React.Dispatch<React.SetStateAction<string>>
+  setSubtitleProgress: React.Dispatch<React.SetStateAction<number>>
+  setChatBlocks: React.Dispatch<React.SetStateAction<ChatBlock[]>>
+  subtitleRef: React.MutableRefObject<string>
   setCameraTarget: React.Dispatch<React.SetStateAction<CameraTarget | null>>
   executed: React.RefObject<Set<number>>
   setWhiteboardLines: React.Dispatch<React.SetStateAction<string[]>>
@@ -40,6 +48,9 @@ export function useTimelineController({
   steps,
   setGraphObjects,
   setSubtitle,
+  setSubtitleProgress,
+  setChatBlocks,
+  subtitleRef,
   setCameraTarget,
   stepIndex,
   setStepIndex,
@@ -52,6 +63,7 @@ export function useTimelineController({
   const advanceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const actionTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
   const audioEndedHandlerRef = useRef<(() => void) | null>(null);
+  const progressRafRef = useRef<number | null>(null);
 
   // Wait for speech to reach progress threshold
   const waitForSpeechProgress = (audio: HTMLAudioElement | null, threshold: number, timeout: number): Promise<void> => {
@@ -167,9 +179,23 @@ export function useTimelineController({
       audioEndedHandlerRef.current = null;
     }
 
+    if (progressRafRef.current != null) {
+      cancelAnimationFrame(progressRafRef.current);
+      progressRafRef.current = null;
+    }
     if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current.currentTime = 0;
+    }
+    setSubtitleProgress(0);
+
+    if (stepIndex > 0) {
+      const prevText = subtitleRef.current ?? '';
+      const prevStep = steps[stepIndex - 1];
+      const prevWhiteboard = prevStep?.whiteboardLines ?? [];
+      const prevAtIndices = prevStep?.whiteboardAtIndices;
+      const blocks = buildBlocksForCompletedStep(prevText, prevWhiteboard, prevAtIndices);
+      if (blocks.length) setChatBlocks((prev) => [...prev, ...blocks]);
     }
 
     executed.current.add(stepIndex)
@@ -196,6 +222,32 @@ export function useTimelineController({
 
     // Execute actions progressively after speech starts
     audioTimingPromise.then(async (audioTiming) => {
+      const audio = audioRef.current;
+      if (audio && audio.duration && isFinite(audio.duration)) {
+        const runProgressLoop = () => {
+          const a = audioRef.current;
+          if (!a || a.ended) {
+            setSubtitleProgress(1);
+            progressRafRef.current = null;
+            return;
+          }
+          const p = Math.min(1, a.currentTime / a.duration);
+          setSubtitleProgress(p);
+          progressRafRef.current = requestAnimationFrame(runProgressLoop);
+        };
+        const onEnded = () => {
+          if (progressRafRef.current != null) {
+            cancelAnimationFrame(progressRafRef.current);
+            progressRafRef.current = null;
+          }
+          setSubtitleProgress(1);
+        };
+        audio.addEventListener('ended', onEnded, { once: true });
+        progressRafRef.current = requestAnimationFrame(runProgressLoop);
+      } else {
+        setSubtitleProgress(1);
+      }
+
       const actions = step.actions ?? [];
       const whiteboardLines = step.whiteboardLines ?? [];
       
@@ -206,7 +258,7 @@ export function useTimelineController({
         TIMING_CONFIG.SPEECH_PROGRESS_TIMEOUT
       );
 
-      // Stagger whiteboard lines
+      // Stagger whiteboard lines (graph/UI state only; chat shows them inline from progress)
       whiteboardLines.forEach((line, index) => {
         const delay = TIMING_CONFIG.WHITEBOARD_FIRST_DELAY + (index * TIMING_CONFIG.WHITEBOARD_STAGGER_DELAY);
         const timer = setTimeout(() => {
@@ -297,9 +349,9 @@ export function useTimelineController({
       
       // Fallback: add whiteboard lines immediately if audio fails
       const whiteboardLines = step.whiteboardLines ?? [];
-      if (whiteboardLines.length > 0) {
-        setWhiteboardLines(prev => [...prev, ...whiteboardLines]);
-      }
+      whiteboardLines.forEach((line) => {
+        setWhiteboardLines(prev => [...prev, line]);
+      });
       
       for (const action of actions) {
         switch (action.type) {
@@ -333,17 +385,24 @@ export function useTimelineController({
     });
 
     return () => {
-      // Cleanup: clear all action timers
+      if (progressRafRef.current != null) {
+        cancelAnimationFrame(progressRafRef.current);
+        progressRafRef.current = null;
+      }
       actionTimersRef.current.forEach(timer => clearTimeout(timer));
       actionTimersRef.current = [];
     };
     
-  }, [stepIndex, steps, setGraphObjects, setSubtitle, setCameraTarget, setWhiteboardLines, setStepIndex, setSceneConfig])
+  }, [stepIndex, steps, setGraphObjects, setSubtitle, setSubtitleProgress, setChatBlocks, subtitleRef, setCameraTarget, setWhiteboardLines, setStepIndex, setSceneConfig])
 
   
   // cleanup audio when component unmounts
   useEffect(() => {
     return () => {
+      if (progressRafRef.current != null) {
+        cancelAnimationFrame(progressRafRef.current);
+        progressRafRef.current = null;
+      }
       if (audioRef.current) {
         if (audioEndedHandlerRef.current) {
           audioRef.current.removeEventListener('ended', audioEndedHandlerRef.current);

@@ -129,6 +129,15 @@ export async function generateStep(
       if (stepWhiteboardLines?.length) {
         stepWhiteboardLines = validateAndFixWhiteboardLines(stepWhiteboardLines);
       }
+      const subLen = (subtitleFromOutline ?? "").length;
+      let stepWhiteboardAtIndices = parsed.whiteboardAtIndices;
+      if (stepWhiteboardAtIndices != null && stepWhiteboardLines != null) {
+        if (stepWhiteboardAtIndices.length !== stepWhiteboardLines.length) {
+          stepWhiteboardAtIndices = undefined;
+        } else {
+          stepWhiteboardAtIndices = stepWhiteboardAtIndices.map((i) => Math.min(Math.max(0, i), subLen));
+        }
+      }
 
       const step: Step = {
         subtitle: subtitleFromOutline ?? "",
@@ -137,6 +146,7 @@ export async function generateStep(
         actions: parsed.actions ?? [],
         cameraTarget: outline[step_number]?.cameraTarget ?? parsed.cameraTarget ?? undefined,
         whiteboardLines: stepWhiteboardLines ?? undefined,
+        whiteboardAtIndices: stepWhiteboardAtIndices ?? undefined,
         sceneConfig: outline[step_number]?.scene != null ? expandOutlineScene(outline[step_number].scene as OutlineSceneCondensed) : undefined,
       };
       StepSchema.parse(step);

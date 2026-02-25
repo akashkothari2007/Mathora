@@ -9,6 +9,8 @@ export type Step = {
     actions?: Action[]
     cameraTarget?: CameraTarget | null
     whiteboardLines?: string[]
+    /** 0-based character index in subtitle where each whiteboard line should appear (same order as whiteboardLines). */
+    whiteboardAtIndices?: number[]
     timeToAdvance?: number
     sceneConfig?: SceneConfig
 }

@@ -52,7 +52,8 @@ export default function MathScene({ children, cameraTarget, sceneConfig }: MathS
     return (
         <Canvas
         camera={{ position: [0, 0, 10], fov: 50 }}
-        className="bg-neutral-950"
+        className="bg-[#0c0c0c]"
+        style={{ background: "radial-gradient(ellipse 80% 70% at 50% 50%, #141414 0%, #080808 100%)" }}
         >
             <CameraRig cameraTarget={cameraTarget} />
 

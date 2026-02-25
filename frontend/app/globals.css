@@ -39,3 +39,18 @@ body {
   animation: whiteboard-line-in 0.5s ease-out forwards;
   animation-fill-mode: both;
 }
+
+@keyframes whiteboard-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-whiteboard-in {
+  animation: whiteboard-in 0.35s ease-out forwards;
+}

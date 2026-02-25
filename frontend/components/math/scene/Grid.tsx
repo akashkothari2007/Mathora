@@ -10,14 +10,14 @@ export default function Grid({ size = 20 }: GridProps) {
     <DreiGrid
       args={[size * 2, size * 2]}
       cellSize={1}
-      cellThickness={0.4}
-      cellColor="#2a2a2a"
+      cellThickness={0.5}
+      cellColor="#333333"
       sectionSize={5}
-      sectionThickness={0.8}
-      sectionColor="#3a3a3a"
+      sectionThickness={1}
+      sectionColor="#404040"
       infiniteGrid
       fadeDistance={size * 2}
-      fadeStrength={1.5}
+      fadeStrength={1.2}
     />
   )
 }
