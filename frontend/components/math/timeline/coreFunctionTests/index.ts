@@ -10,3 +10,8 @@ export { labelSymbolTestTimeline } from "./labelSymbolTestTimeline";
 export { functionAttentionTimeline } from "./functionAttentionTimeline";
 export { whiteboardTimeline } from "./whiteBoardTimeline";
 export { sceneConfigTimeline } from "./sceneConfigTimeline";
+export { demoDerivativeTimeline } from "./demoDerivativeTimeline";
+export { demoQuadraticFormulaTimeline } from "./demoQuadraticFormulaTimeline";
+export { demoIntegralAreaTimeline } from "./demoIntegralAreaTimeline";
+export { demoUnitCircleSineTimeline } from "./demoUnitCircleSineTimeline";
+export { demoSineTimeline } from "./demoSineTimeline";

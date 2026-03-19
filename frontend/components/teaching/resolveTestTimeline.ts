@@ -13,6 +13,11 @@ import {
   functionAttentionTimeline,
   whiteboardTimeline,
   sceneConfigTimeline,
+  demoDerivativeTimeline,
+  demoQuadraticFormulaTimeline,
+  demoIntegralAreaTimeline,
+  demoUnitCircleSineTimeline,
+  demoSineTimeline,
 } from "../math/timeline/coreFunctionTests";
 import type { Step } from "../math/types/steps";
 
@@ -30,5 +35,10 @@ export function resolveTestTimeline(prompt: string): Step[] | null {
   if (prompt === "function attention test") return functionAttentionTimeline;
   if (prompt === "whiteboard test") return whiteboardTimeline;
   if (prompt === "scene test") return sceneConfigTimeline;
+  if (prompt === "derivative demo") return demoDerivativeTimeline;
+  if (prompt === "quadratic demo") return demoQuadraticFormulaTimeline;
+  if (prompt === "integral demo") return demoIntegralAreaTimeline;
+  if (prompt === "unit circle demo") return demoUnitCircleSineTimeline;
+  if (prompt === "sine demo") return demoSineTimeline;
   return null;
 }
